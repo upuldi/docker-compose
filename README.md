@@ -55,8 +55,7 @@ This Docker Compose setup is designed to integrate into a robust home lab enviro
 
 The architecture is structured as follows:
 
-*   **External Network Layer**
-    
+*   **External Network Layer**    
     *   **Internet Traffic** flows through **Cloudflare** (acting as DNS, Proxy, and Firewall).
         
     *   **Cloudflare** directs traffic to the home lab's gateway.
