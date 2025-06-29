@@ -361,4 +361,186 @@ Below is a list of the services defined in the `docker-compose.yaml` file, their
     
     *   **Image:** linuxserver/plex
         
-    *   **Purpose:** A dedicated Plex instance for organizing and streaming your audiobook collecti
+    *   **Purpose:** A dedicated Plex instance for organizing and streaming your audiobook collection
+
+*   on.
+    
+
+### Financial & Productivity Tools
+
+*   **firefly**
+    
+    *   **Image:** fireflyiii/core:latest
+        
+    *   **Purpose:** A self-hosted personal finance manager that helps you keep track of your expenses and income.
+        
+*   **fidi (Firefly III Data Importer)**
+    
+    *   **Image:** fireflyiii/data-importer:latest
+        
+    *   **Purpose:** A companion application for Firefly III that helps import financial data from various sources (e.g., CSV files).
+        
+*   **linkace**
+    
+    *   **Image:** linkace/linkace:simple
+        
+    *   **Purpose:** A self-hosted archive to collect, categorize, and permanently store your favorite links.
+        
+*   **paperless**
+    
+    *   **Image:** ghcr.io/paperless-ngx/paperless-ngx
+        
+    *   **Purpose:** A document management system that transforms your physical documents into a searchable online archive. It uses OCR for text recognition.
+        
+*   **vaultwarden**
+    
+    *   **Image:** vaultwarden/server:latest
+        
+    *   **Purpose:** An unofficial, lightweight Bitwarden server implementation written in Rust, providing a self-hosted password manager.
+        
+*   **huginn**
+    
+    *   **Image:** ghcr.io/huginn/huginn
+        
+    *   **Purpose:** A system for building agents that monitor and act on your behalf. It can create complex workflows and automations.
+        
+*   **rss-bridge**
+    
+    *   **Image:** rssbridge/rss-bridge
+        
+    *   **Purpose:** Generates RSS feeds for websites that don't have one, allowing you to follow content from almost any site.
+        
+*   **freshrss**
+    
+    *   **Image:** lscr.io/linuxserver/freshrss:latest
+        
+    *   **Purpose:** A free, self-hostable RSS feed reader that allows you to read news from all your favorite websites.
+        
+*   **hoarder**
+    
+    *   **Image:** ghcr.io/hoarder-app/hoarder:release
+        
+    *   **Purpose:** A digital archiving tool to save and organize web content.
+        
+*   **n8n**
+    
+    *   **Image:** docker.n8n.io/n8nio/n8n
+        
+    *   **Purpose:** A workflow automation tool that helps you integrate various services and automate tasks.
+        
+*   **planka**
+    
+    *   **Image:** ghcr.io/plankanban/planka:latest
+        
+    *   **Purpose:** A self-hosted project management tool, similar to Trello.
+        
+*   **rest-api-planka**
+    
+    *   **Image:** upuldi/planka-rest-api:latest
+        
+    *   **Purpose:** A custom REST API for the Planka project management tool, likely extending its functionality.
+        
+
+### Logging & Monitoring
+
+*   **splunk**
+    
+    *   **Image:** splunk/splunk:8.2
+        
+    *   **Purpose:** A powerful platform for searching, monitoring, and analyzing machine-generated big data.
+        
+*   **loki**
+    
+    *   **Image:** grafana/loki:latest
+        
+    *   **Purpose:** A horizontally-scalable, highly-available, multi-tenant log aggregation system inspired by Prometheus. Designed to be cost-effective and easy to operate.
+        
+*   **promtail**
+    
+    *   **Image:** grafana/promtail:latest
+        
+    *   **Purpose:** An agent that ships logs from your local machines to a Loki instance. It's often run on each node to collect and forward logs.
+        
+*   **grafana**
+    
+    *   **Image:** grafana/grafana:latest
+        
+    *   **Purpose:** A leading open-source platform for monitoring and observability. It allows you to create dashboards and visualize data from various sources (like Loki and Splunk).
+        
+*   **fluent-bit**
+    
+    *   **Image:** cr.fluentbit.io/fluent/fluent-bit:latest
+        
+    *   **Purpose:** A fast and lightweight log processor and forwarder, often used to collect logs from various sources and send them to a centralized logging system.
+        
+*   **elasticsearch**
+    
+    *   **Image:** elasticsearch:7.9.1
+        
+    *   **Purpose:** A distributed, RESTful search and analytics engine, often used as the backend for logging solutions (ELK stack).
+        
+*   **kibana**
+    
+    *   **Image:** kibana:7.9.1
+        
+    *   **Purpose:** A data visualization and exploration tool used with Elasticsearch. It provides powerful dashboards and reports for analyzing data.
+        
+
+### Identity & Access Management
+
+*   **authentic-postgresql**
+    
+    *   **Image:** docker.io/library/postgres:16-alpine
+        
+    *   **Purpose:** The PostgreSQL database backend for Authentik.
+        
+*   **authentic-redis**
+    
+    *   **Image:** docker.io/library/redis:alpine
+        
+    *   **Purpose:** The Redis cache for Authentik.
+        
+*   **authentic-server (authentik)**
+    
+    *   **Image:** ${AUTHENTIK\_IMAGE} (defaults to ghcr.io/goauthentik/server)
+        
+    *   **Purpose:** The main Authentik server responsible for identity and access management, including SSO, MFA, and user provisioning.
+        
+*   **authentic-worker**
+    
+    *   **Image:** ${AUTHENTIK\_IMAGE}
+        
+    *   **Purpose:** A worker process for Authentik, handling background tasks and integrations.
+        
+
+### Utilities & Development
+
+*   **speedtest**
+    
+    *   **Image:** henrywhitaker3/speedtest-tracker
+        
+    *   **Purpose:** A self-hosted application for tracking your internet speed over time.
+        
+*   **chrome (for Hoarder)**
+    
+    *   **Image:** gcr.io/zenika-hub/alpine-chrome:123
+        
+    *   **Purpose:** A headless Chrome browser instance used by the hoarder service for web scraping and archiving.
+        
+*   **meilisearch**
+    
+    *   **Image:** getmeili/meilisearch:v1.11.1
+        
+    *   **Purpose:** A fast, open-source search engine used by the hoarder service for full-text search capabilities.
+        
+*   **obsidian**
+    
+    *   **Image:** lscr.io/linuxserver/obsidian:latest
+        
+    *   **Purpose:** A containerized version of Obsidian, a powerful knowledge base and note-taking application.
+        
+*   **code-server**
+    
+    *   **Image:** lscr.io/linuxserver/code-server
+        
+    *   **Purpose:** Runs VS Code in your browser, allowing you to access a full development environment from any device.
