@@ -250,7 +250,7 @@ Below is a list of the services defined in the `docker-compose.yaml` file, their
 
 ### Core Infrastructure
 
-*   **autoheal**
+*   `autoheal`
     
     *   **Image:** willfarrell/autoheal
         
