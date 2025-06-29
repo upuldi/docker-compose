@@ -102,19 +102,12 @@ Features
 --------
 
 *   **Automation:** Tools for automated media downloading and management.
-    
 *   **Media Serving:** Robust media server for movies, TV shows, and audiobooks.
-    
 *   **Financial Management:** Personal finance tracking and data import.
-    
 *   **Knowledge & Collaboration:** Wiki and bookmark management.
-    
 *   **System Monitoring:** Centralized logging, metrics collection, and visualization.
-    
 *   **Network Utilities:** DDNS updates, web proxy, and network analysis.
-    
-*   **Identity Management:** Authentication server for unified login across services.
-    
+*   **Identity Management:** Authentication server for unified login across services.   
 *   **Development Tools:** Browser-in-a-box solutions and a code server.
     
 
