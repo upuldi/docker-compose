@@ -126,3 +126,20 @@ Before you begin, ensure you have the following installed on your host machine:
 *   **Docker:** [Installation Guide](https://docs.docker.com/get-docker/)
     
 *   **Docker Compose:** Usually included with Docker Desktop, or available as a standalone installation: [Installation Guide](https://docs.docker.com/compose/install/)
+
+Setup Instructions
+------------------
+
+### 1\. Clone the Repository
+
+First, clone this repository to your local machine:
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   git clone https://github.com/your-username/your-repo-name.git  cd your-repo-name   `
+
+### 2\. Configure Environment Variables
+
+**This is the most critical step for security.** The docker-compose.yaml file uses environment variables (e.g., $PUID, $PGID, $TZ, $DOCKER\_PATH, and various secrets). You must create a .env file in the root directory of this project (next to your docker-compose.yaml file) and populate it with your specific values.
+
+**DO NOT COMMIT THIS .env FILE TO GIT.** Add .env to your .gitignore file.
+
+Here's an example of what your .env file might look like. **Replace all placeholder values with your actual, secure information.**
