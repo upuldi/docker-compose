@@ -587,3 +587,32 @@ The docker-compose.yaml file includes several commented-out services that you ca
     
 
 To enable any of these, simply uncomment their respective sections in the docker-compose.yaml file and ensure all necessary environment variables are set in your .env file.
+
+Network Configuration
+---------------------
+
+The docker-compose.yaml defines two custom networks:
+
+*   **dockervlan (MacVLAN)**: This network is configured as a macvlan, which allows containers to have their own unique MAC addresses and IP addresses on your physical network. This means they appear as separate devices on your LAN, making them directly accessible from other devices on your network without port forwarding on the host.
+    
+    *   **parent**: **Critical:** You _must_ update ovs\_eth0 to match the name of your host machine's physical network interface (e.g., eth0, enp0s3).
+        
+    *   **subnet**: The IP range for this network. Ensure it's within your LAN's subnet but outside your router's DHCP range to avoid conflicts.
+        
+    *   **gateway**: Your router's IP address.
+        
+    *   **aux\_addresses**: host is an optional IP assigned to the host within the macvlan network, useful for host-to-container communication.
+        
+*   **host\_network (Bridge)**: This is a standard Docker bridge network. Containers connected to this network can communicate with each other and the host, but are not directly exposed to the external network without explicit port mapping.
+
+Usage and Management
+--------------------
+
+*   ```bash docker-compose up -d  ```
+*   ```bash docker-compose --profile download up -d   ```   
+*   ```bash docker-compose down      ```
+*   ```bash docker-compose down -v # Use -v to remove anonymous volumes too      ```
+*   ```bash docker-compose logs -f      ```
+*   ```bash docker-compose logs -f plex      ```
+*   ```bash docker-compose restart radarr     ```
+*   ```bash docker-compose pull && docker-compose up -d --remove-orphans   ```
