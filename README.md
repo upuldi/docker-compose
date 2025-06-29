@@ -256,7 +256,7 @@ Below is a list of the services defined in the `docker-compose.yaml` file, their
         
     *   **Purpose:** Automatically restarts unhealthy Docker containers based on their healthchecks.
         
-*   **watchtower**
+*   `**watchtower**`
     
     *   **Image:** containrrr/watchtower
         
