@@ -1,0 +1,2081 @@
+version: "3.3"
+
+services:
+  #
+  # autoheal - restarts unhealthy containers
+  #
+  autoheal:
+    container_name: autoheal
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - TZ=$TZ
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    image: willfarrell/autoheal
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.32        
+
+  #
+  # Portainer - docker manager
+  #
+  # portainer:
+  #   image: portainer/portainer-ce
+  #   container_name: portainer
+  #   profiles: ['optional']     
+  #   restart: always
+  #   command: -H unix:///var/run/docker.sock
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.124
+  #   ports:
+  #     - 9000:9000
+  #     - 8000:8000
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - $DOCKER_PATH/portainer:/data
+  #   environment:
+  #     - TZ=$TZ
+
+  #
+  # Watchtower - updates containers with latest images
+  #
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+    environment:
+      TZ: $TZ
+      WATCHTOWER_REMOVE_VOLUMES: "true"
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_STOPPED: "true"
+      WATCHTOWER_POLL_INTERVAL: $WT_INTERVAL
+      WATCHTOWER_TIMEOUT: 15
+      WATCHTOWER_NOTIFICATIONS_LEVEL: info
+      WATCHTOWER_NOTIFICATIONS: shoutrrr
+      # Using Pushbullet, telegram and pushover as examples, but just pick one
+      # WATCHTOWER_NOTIFICATION_URL: "pushover://shoutrrr:YOUR_PUSHOVER_APP_API_SECRET@YOUR_PUSHOVER_USER_API_SECRET/?devices=YOUR_PUSHOVER_DEVICE telegram://YOUR_TELEGRAM_BOT_TOKEN@telegram?channels=YOUR_TELEGRAM_CHAT_ID pushbullet://YOUR_PUSHBULLET_API_SECRET"
+    restart: always
+
+  #
+  # Dozzle - Container log aggregator
+  #
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle
+    profiles: ['debug']     
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.121
+    ports:
+      - 9999:8080
+    restart: unless-stopped
+    # healthcheck:
+    #   test: curl -fSs http://127.0.0.1:9999 > /dev/null || exit 1
+    #   start_period: 20s
+    #   timeout: 5s
+    #   interval: 5s
+    #   retries: 3    
+
+  #
+  # Prowlarr - index aggregator
+  #
+  prowlarr:
+    container_name: prowlarr
+    image: linuxserver/prowlarr:nightly
+    profiles: ['download']    
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.143
+    ports:
+      - 9696:9696
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - UMASK=002
+    volumes:
+      - $DOCKER_PATH/prowlarr:/config
+    labels: 
+      - autoheal="true"
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:9696 > /dev/null || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 5s
+      retries: 3    
+    restart: unless-stopped
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
+
+  #
+  # radarr - Movies Search
+  #
+  radarr:
+    environment:
+      - UMASK_SET=22
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    volumes:
+      - $DOCKER_PATH/radarr:/config:rw
+      - $MEDIA_PATH:/media:rw
+      - $DOWNLOADS:/downloads:rw
+    container_name: radarr
+    profiles: ['download']    
+    labels: 
+      - autoheal="true"
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:7878 > /dev/null || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    ports:
+      - 7878:7878
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.132   
+    restart: unless-stopped
+    entrypoint:
+      - /init
+    image: linuxserver/radarr:latest
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
+
+  #
+  # Sonarr - Show Search 131
+  #
+  sonarr:
+    environment:
+      - UMASK_SET=22
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    volumes:
+      - $DOCKER_PATH/sonarr:/config:rw
+      - $MEDIA_PATH:/media:rw
+      - $DOWNLOADS:/downloads:rw
+    container_name: sonarr
+    labels: 
+      - autoheal="true"
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:8989 || exit 1
+      start_period: 90s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.131          
+    ports:
+      - 8989:8989
+    restart: 'unless-stopped'
+    entrypoint:
+      - /init
+    image: lscr.io/linuxserver/sonarr:latest
+    profiles: ['download']    
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
+
+  lidarr:
+    image: linuxserver/lidarr:nightly
+    container_name: lidarr
+    profiles: ['download']    
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - UMASK_SET=022 
+    volumes:
+      - $DOCKER_PATH/lidarr:/config
+      - $MEDIA_PATH_MUSIC:/media
+      - $DOWNLOADS:/downloads:rw
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.144     
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+    labels: 
+      - autoheal="true"
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:8686 > /dev/null || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
+
+  #
+  # Bazarr - subtitles search
+  #
+  # bazarr:
+  #   image: linuxserver/bazarr:development
+  #   container_name: bazarr
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #     - UMASK_SET=022 #optional
+  #   volumes:
+  #     - $DOCKER_PATH/bazarr:/config
+  #     - $MEDIA_PATH:/media
+  #   ports:
+  #     - 6767:6767
+  #   labels: 
+  #     - autoheal="true"
+  #   healthcheck:
+  #     test: curl -fSs http://127.0.0.1:6767 > /dev/null || exit 1
+  #   start_period: 60s
+  #   timeout: 5s
+  #   interval: 5s
+  #   retries: 3
+  #   restart: unless-stopped
+  #   mem_limit: 300M
+  #   mem_reservation: 250M
+  
+  #
+  # E-Book Searcher
+  #
+  readarr:
+    container_name: readarr
+    image: lscr.io/linuxserver/readarr:develop
+    profiles: ['download']    
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.142    
+    ports:
+      - 8787:8787
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    volumes:
+      - $DOCKER_PATH/readarr:/config
+      - $MEDIA_PATH:/media:rw
+      - $DOWNLOADS:/downloads:rw
+    restart: unless-stopped
+    labels: 
+      - autoheal="true"
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:8787 > /dev/null || exit 1
+      start_period: 20s
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
+
+  #
+  # Qbittorrent - default creds are admin & adminadmin
+  #
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    profiles: ['download']    
+    environment:
+      - PUID=$PUID
+      - PGID=$PUID
+      - TZ=$TZ
+      - WEBUI_PORT=8080
+    volumes:
+      - $DOCKER_PATH/qbittorrent/config:/config
+      - $DOWNLOADS:/downloads
+      - $MEDIA_PATH:/movies
+      - $MEDIA_PATH_TV:/tv
+      - $MEDIA_PATH_MUSIC:/music
+      - $MEDIA_PATH_AUDIO:/audio                 
+      - $MEDIA_PATH_BOOKS:/books                
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.135
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+    labels: 
+      - autoheal="true"
+    # healthcheck:
+    #   test: curl -fSs http://XX.XX.XY.135:8080 || exit 1
+    #   start_period: 90s
+    #   timeout: 10s
+    #   interval: 5s
+    #   retries: 3
+
+  # Poster
+  # posterr:
+  #   image: petersem/posterr
+  #   container_name: posterr
+  #   profiles: ['download']    
+  #   environment:
+  #     TZ: $TZ
+  #   volumes:
+  #     - $DOCKER_PATH/posterr/randomthemes:/usr/src/app/public/randomthemes
+  #     - $DOCKER_PATH/posterr/config:/usr/src/app/config
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.145
+  #   ports:
+  #     - 9876:3000
+  #   restart: always
+
+  # gaps - finds missing movies in plex libraries
+  # gaps:
+  #   profiles: ['download']    
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.146  
+  #   ports:
+  #     - 8484:8484
+  #   container_name: gaps
+  #   expose:
+  #     - '32400'
+  #   volumes:
+  #     - $DOCKER_PATH/gaps:/usr/data
+  #   image: housewrecker/gaps
+  #   restart: unless-stopped  
+
+
+---
+## Servers
+
+  #DDNS Updater
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.85
+    ports:
+      - 8000:8000
+    volumes:
+      - $DOCKER_PATH/ddns-updater/data:/updater/data
+    environment:
+      - CONFIG=
+      - PERIOD=5m
+      - UPDATE_COOLDOWN_PERIOD=5m
+      - PUBLICIP_FETCHERS=all
+      - PUBLICIP_HTTP_PROVIDERS=all
+      - PUBLICIPV4_HTTP_PROVIDERS=all
+      - PUBLICIPV6_HTTP_PROVIDERS=all
+      - PUBLICIP_DNS_PROVIDERS=all
+      - PUBLICIP_DNS_TIMEOUT=3s
+      - HTTP_TIMEOUT=10s
+      - TZ=$TZ
+
+      # Web UI
+      - LISTENING_PORT=8000
+      - ROOT_URL=/
+
+      # Backup
+      - BACKUP_PERIOD=0 # 0 to disable
+      - BACKUP_DIRECTORY=/updater/data
+      # Other
+      - LOG_LEVEL=info
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+  #General Plex
+  plex:
+    container_name: plex
+    restart: unless-stopped
+    image: linuxserver/plex
+    volumes:
+      - $DOCKER_PATH/plex/config:/config
+      - $DOCKER_PATH/plex/transcode:/transcode
+      - $MEDIA_PATH:/movies
+      - $MEDIA_PATH_TV:/tv
+      - $MEDIA_PATH_MUSIC:/music     
+      - $DOWNLOADS:/downloads
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.114
+    environment:
+      - PUID=$PUID
+      - PGID=937
+      - TZ=$TZ
+      - HOSTNAME=$HOST_NAME
+      - PLEX_CLAIM=$PLEX_CLAIM_TOKEN
+      - ADVERTISE_IP=$ADVERTISE_IP
+      - VERSION=docker
+      - ALLOWED_NETWORKS=$ALLOWED_NETWORKS
+    labels: 
+      autoheal: 'true'
+    healthcheck:
+      test: curl -fsS http://localhost:32400/identity > /dev/null || exit 1
+      start_period: 20s
+      timeout: 10s
+      interval: 5s
+      retries: 3
+    devices:
+      - '/dev/dri:/dev/dri'
+
+
+  # Plex Audio Books
+  plex_audio:
+    container_name: plex_audio
+    restart: unless-stopped
+    image: linuxserver/plex
+    volumes:
+      - $DOCKER_PATH/plex_audio/config:/config
+      - $DOCKER_PATH/plex_audio/transcode:/transcode
+      - $MEDIA_PATH_AUDIO:/audio_books
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.12
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - HOSTNAME=$HOST_NAME
+      - PLEX_CLAIM=$PLEX_CLAIM_TOKEN_AUDIO
+      - ADVERTISE_IP=$ADVERTISE_IP_AUDIO
+      - VERSION=docker
+      - ALLOWED_NETWORKS=$ALLOWED_NETWORKS
+    labels: 
+      autoheal: 'true'
+    healthcheck:
+      test: curl -fsS http://localhost:32400/identity > /dev/null || exit 1
+      start_period: 20s
+      timeout: 10s
+      interval: 5s
+      retries: 3
+    # Un-comment the below if you have an embedded intel GPU
+    # devices:
+    #   - /dev/dri:/dev/dri
+
+---
+## Databases and Key Services
+
+#  # Postgres 10
+#   postgres:
+#     image: postgres:10
+#     container_name: postgres
+#     environment:
+#       - PUID=$PUID
+#       - PGID=$PGID
+#       - TZ=$TZ
+#       - POSTGRES_USER=postgres
+#       - POSTGRES_DB=postgres
+#       - POSTGRES_PASSWORD=postgres
+#     volumes:
+#       - $DOCKER_PATH/postgres:/var/lib/postgresql/data
+#       - $DOCKER_PATH/postgres-backup:/backup
+#       - $DOCKER_BACKUP_PATH/postgres:/postgresbackup
+#     networks:
+#       dockervlan:
+#         ipv4_address: XX.XX.XX.67
+#     ports:
+#       - 5432:5432
+#     restart: always
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+ # Postgres Latest
+  postgres:
+    image: postgres:15.1
+    container_name: postgres
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - POSTGRES_USER=postgres
+      - PGUSER=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=postgres # Consider using Docker secrets or a more robust solution for production
+    volumes:
+      - $DOCKER_PATH/postgres-lat:/var/lib/postgresql/data
+      - $DOCKER_PATH/postgres-backup-lat:/backup
+      - $DOCKER_BACKUP_PATH/postgres:/postgresbackup
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.64
+    ports:
+      - 5432:5432
+    restart: always
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+ 
+ # MySQL
+  # mysql:
+  #   image: mysql
+  #   container_name: mysql
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #     - MYSQL_USER=mysql
+  #     - MYSQL_DATABASE=owncloud
+  #     - MYSQL_ROOT_PASSWORD=YOUR_MYSQL_ROOT_PASSWORD # Replaced sensitive password
+  #     - MYSQL_PASSWORD=YOUR_MYSQL_PASSWORD # Replaced sensitive password
+  #   volumes:
+  #     - $DOCKER_PATH/mysql:/var/lib/mysql
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.101
+  #   ports:
+  #     - 3306:3306
+  #   restart: always
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+  #     timeout: 20s
+  #     retries: 10
+
+
+
+---
+## Other Servers
+
+ #  wikijs
+  wikijs:
+    image: requarks/wiki
+    container_name: wikijs
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.126
+    ports:
+      - 3000:3000
+    volumes:
+      - $DOCKER_PATH/wikijs/logs:/logs
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=XX.XX.XX.64
+      - DB_PORT=5432
+      - DB_USER=wikijs
+      - DB_PASS=wikijs # Consider using Docker secrets or a more robust solution for production
+      - DB_NAME=wikijs
+      - DB_SSL=false
+      - SSL_ACTIVE=0
+      - LETSENCRYPT_DOMAIN=wiki.yourdomain.com # Replaced sensitive domain
+      - TZ=$TZ
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  # FireFox
+  firefox:
+    image: lscr.io/linuxserver/firefox:latest
+    container_name: firefox
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    volumes:
+      - $DOCKER_PATH/chrome:/config
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.139
+    ports:
+      - 3000:3000
+      - 3001:3001
+    shm_size: "1gb"
+    restart: unless-stopped
+
+  # Chromium
+  # chromium:
+  #   image: lscr.io/linuxserver/chromium:latest
+  #   container_name: chromium
+  #   security_opt:
+  #     - seccomp:unconfined #optional
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #     - CHROME_CLI=https://www.linuxserver.io/ #optional
+  #   volumes:
+  #     - $DOCKER_PATH/chromium:/config
+  #   ports:
+  #     - 3000:3000
+  #     - 3001:3001
+  #   shm_size: "1gb"
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.140      
+  #   restart: unless-stopped
+
+
+  # NGinx Local
+  nginxl:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginxl
+    environment:
+      # - PUID=$PUID
+      # - PGID=$PGID
+      - TZ=$TZ
+      - DB_SQLITE_FILE=/data/database.sqlite
+    volumes:
+      - $DOCKER_PATH/nginxl/data:/data
+      - $DOCKER_PATH/nginxl/letsencrypt:/etc/letsencrypt
+      - $DOCKER_PATH/nginxl/var/log:/var/log
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.1
+    ports:
+      - 80:80
+      - 81:81
+      - 443:443
+    shm_size: "1gb"
+    restart: unless-stopped
+
+  # Nginx Local Updater. This is required for Cloudflare/Lets encrypt certificates to be working. 
+  updater:
+    image: busybox 
+    command: ["sh", "-c", "sleep 5 && /bin/sh -c 'cd /app && apt-get update && apt-get upgrade -y && pip install --upgrade cloudflare==2.19.* && pip install --upgrade pip' && docker-compose restart nginxl"]
+    volumes:
+      - ./update_and_restart.sh:/app/update_and_restart.sh  
+      - ./docker-compose.yaml:/app/docker-compose.yaml 
+    depends_on:
+      - nginxl 
+
+
+
+  # Nginx
+  nginx:
+    image: lepresidente/nginx-proxy-manager:latest
+    container_name: nginx   
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - UMASK=000
+      - TZ=$TZ
+      - DISABLE_IPV6= true
+      # - CROWDSEC_OPENRESTY_BOUNCER= |
+      #   ENABLED=true
+      #   API_URL=http://XX.XX.XY.45:8080
+      #   API_KEY=YOUR_CROWDSEC_API_KEY # Replaced sensitive API key
+      # - CROWDSEC_BOUNCER=true
+      # - CROWDSEC_OPENRESTY_BOUNCER=true
+      - ADMIN_PANEL_LOG= "1"
+      - CROWDSEC_BOUNCER= "1"
+      - OPENRESTY_DEBUG= "0"
+
+    volumes:
+      - $DOCKER_PATH/nginx:/config
+      - $DOCKER_PATH/nginx/log:/config/log
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.112
+      host_network:
+
+    ports:
+      - 7818:8181
+      - 8080:8080
+      - 4443:4443
+    shm_size: "1gb"
+    restart: unless-stopped
+
+  # Crowdsec
+  crowdsec:
+    container_name: crowdsec
+    image: docker.io/crowdsecurity/crowdsec:latest
+    restart: unless-stopped
+    expose:
+      - 8080    
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ    
+      - COLLECTIONS=crowdsecurity/nginx-proxy-manager Dominic-Wagner/vaultwarden firix/authentik
+    depends_on:
+      - 'nginx'
+      - 'vaultwarden'
+      - 'authentic-server'
+    volumes:
+      - $DOCKER_PATH/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
+      - $DOCKER_PATH/crowdsec/data:/var/lib/crowdsec/data/
+      - $DOCKER_PATH/crowdsec/config:/etc/crowdsec/
+      - $DOCKER_PATH/vaultwarden/logs:/var/log/vw/
+      - $DOCKER_PATH/nginx/log:/var/log/npm:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Mount Docker socket
+    security_opt:
+      - no-new-privileges=true     
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.45
+
+  # Crowdsec-dashboard
+  # dashboard:
+  #   #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
+  #   container_name: crowdsec-dashboard
+  #   build: https://raw.githubusercontent.com/crowdsecurity/example-docker-compose/refs/heads/main/basic/crowdsec/dashboard/Dockerfile
+  #   restart: always
+  #   ports:
+  #     - 3010:3000
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ    
+  #     - MB_DB_FILE=/data/metabase.db
+  #     - MGID=1000
+  #   depends_on:
+  #     - crowdsec
+  #   volumes:
+  #     - $DOCKER_PATH/crowdsec/data:/metabase-data  
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XY.46
+
+  # Planka
+  planka:
+    image: ghcr.io/plankanban/planka:latest
+    container_name: planka
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - BASE_URL=https://project.yourdomain.com # Replaced sensitive domain
+      - TZ=$TZ
+      - DATABASE_URL=postgresql://planka:planka@XX.XX.XX.64:5432/planka
+      - SECRET_KEY=YOUR_PLANKA_SECRET_KEY # Replaced sensitive key
+      - OIDC_ISSUER=https://authentik.yourdomain.com/application/o/planka/ # Replaced sensitive domain
+      - OIDC_CLIENT_ID=YOUR_OIDC_CLIENT_ID # Replaced sensitive ID
+      - OIDC_CLIENT_SECRET=YOUR_OIDC_CLIENT_SECRET # Replaced sensitive secret
+      - OIDC_SCOPES=openid profile email
+      - OIDC_ADMIN_ROLES=planka-admin
+      - OIDC_ENFORCED=true
+      - SHOW_DETAILED_AUTH_ERRORS=true
+
+    volumes:
+      - $DOCKER_PATH/planka:/app/public/user-avatars
+      - $DOCKER_PATH/planka/projekt-background-images:/app/public/project-background-images
+      - $DOCKER_PATH/planka/attachments:/app/public/attachments
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.69
+    ports:
+      - 4000:1337
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # PgAdmin4
+  pgadminn:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    # profiles: ['debug']    
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com # Replaced sensitive email
+      - PGADMIN_DEFAULT_PASSWORD=YOUR_PGADMIN_PASSWORD # Replaced sensitive password
+
+    volumes:
+      - $DOCKER_PATH/pgadmin4:/var/lib/pgadmin:rw
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.68
+    ports:
+      - 80:80
+    restart: unless-stopped
+
+  # Redis
+  redis:
+    image: redis
+    container_name: redis
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.91
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+
+  # tika
+  tika:
+    image: apache/tika
+    container_name: tika
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.129
+    ports:
+      - 9998:9998
+    restart: unless-stopped
+
+  # gotenberg not the latest due to errors
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg:8.7
+    container_name: gotenberg
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.128
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+
+  # paperless
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx
+    container_name: paperless
+    environment:
+      USERMAP_UID: $PUID
+      USERMAP_GID: $PGID
+      TZ: $TZ
+      PAPERLESS_REDIS: redis://XX.XX.XX.91:6379
+      PAPERLESS_OCR_LANGUAGE: eng
+      PAPERLESS_FILENAME_FORMAT: "{created}-{correspondent}-{title}"
+      PAPERLESS_DBHOST: XX.XX.XX.64
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBPASS: paperless # Consider using Docker secrets or a more robust solution for production
+      PAPERLESS_DBSSLMODE: prefer
+      PAPERLESS_TIKA_ENABLED: 1
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://XX.XX.XX.128:3000
+      PAPERLESS_TIKA_ENDPOINT: http://XX.XX.XX.129:9998
+      PAPERLESS_URL: https://paper.yourdomain.com # Replaced sensitive domain
+      PAPERLESS_ALLOWED_HOSTS: paper.yourdomain.com,XX.XX.XX.84 # Replaced sensitive domain
+      PAPERLESS_CORS_ALLOWED_HOSTS: "http://XX.XX.XX.84:800, https://paper.yourdomain.com" # Replaced sensitive domain
+      PAPERLESS_TRUSTED_PROXIES: XX.XX.XX.112
+      PAPERLESS_OCR_MAX_IMAGE_PIXELS: 8000000000
+      PAPERLESS_WORKER_TIMEOUT: 100000
+      PAPERLESS_IGNORE_DATES: 
+      PAPERLESS_CONSUMER_POLLING: 0
+      PAPERLESS_SECRET_KEY: YOUR_PAPERLESS_SECRET_KEY # Replaced sensitive key
+      PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+      PAPERLESS_SOCIALACCOUNT_PROVIDERS: >
+          {
+            "openid_connect": {
+              "APPS": [
+                {
+                  "provider_id": "authentik",
+                  "name": "Authentik",
+                  "client_id": "YOUR_AUTHENTIK_CLIENT_ID", # Replaced sensitive ID
+                  "secret": "YOUR_AUTHENTIK_SECRET", # Replaced sensitive secret
+                  "settings": {
+                    "server_url": "https://authentik.yourdomain.com/application/o/paperless-ngx/.well-known/openid-configuration" # Replaced sensitive domain
+                  }
+                }
+              ],
+              "OAUTH_PKCE_ENABLED": "True"
+            }
+          }
+      PAPERLESS_DISABLE_REGULAR_LOGIN: true
+      PAPERLESS_LOGOUT_REDIRECT_URL: paper.yourdomain.com # Replaced sensitive domain
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.84
+    volumes:
+      - $DOCUMENT_PATH/paperless-documents:/usr/src/paperless/data
+      - $DOCUMENT_PATH/paperless-documents/paperless-data-dir/media:/usr/src/paperless/media
+      - $DOCUMENT_PATH/paperless-documents/paperless-consume-dir:/usr/src/paperless/consume
+      - $DOCUMENT_PATH/paperless-documents/paperless-export-dir:/usr/src/paperless/export
+
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # vaultwarden
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    volumes:
+      - $DOCKER_PATH/vaultwarden:/data/
+      - $DOCKER_PATH/vaultwarden/logs:/data/logs
+
+    ports:
+      - 80:80
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ     
+      - DOMAIN=https://vault.yourdomain.com # Replaced sensitive domain
+      - DATABASE_URL=postgresql://vaultwarden:vaultwarden@postgres.lab.yourdomain.com:5432/vaultwarden # Replaced sensitive domain
+      - LOGIN_RATELIMIT_MAX_BURST=10
+      - LOGIN_RATELIMIT_SECONDS=60
+      - ADMIN_RATELIMIT_MAX_BURST=10
+      - ADMIN_RATELIMIT_SECONDS=60
+      - ADMIN_TOKEN=YOUR_ADMIN_TOKEN # Replaced sensitive token
+      - SENDS_ALLOWED=true
+      - EMERGENCY_ACCESS_ALLOWED=true
+      - WEB_VAULT_ENABLED=true
+      - SIGNUPS_ALLOWED=false
+      - SIGNUPS_VERIFY=true
+      - SIGNUPS_VERIFY_RESEND_TIME=3600
+      - SIGNUPS_VERIFY_RESEND_LIMIT=5
+      - SIGNUPS_DOMAINS_WHITELIST=vault.yourdomain.com # Replaced sensitive domain
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_FROM=your_email@gmail.com # Replaced sensitive email
+      - SMTP_FROM_NAME=Vaultwarden
+      - SMTP_SECURITY=starttls
+      - SMTP_PORT=587
+      - SMTP_USERNAME=your_email@gmail.com # Replaced sensitive email
+      - SMTP_PASSWORD=YOUR_SMTP_PASSWORD # Replaced sensitive password
+      - SMTP_AUTH_MECHANISM="TLS"
+      - LOG_LEVEL=error
+      - EXTENDED_LOGGING=true
+      - globalSettings__disableUserRegistration=true
+      - LOG_FILE=/data/logs/access.log
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.34
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # huginn
+  huginn:
+    image: ghcr.io/huginn/huginn
+    container_name: huginn
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ    
+      - HUGINN_TWITTER_OAUTH_KEY=YOUR_TWITTER_OAUTH_KEY # Replaced sensitive key
+      - HUGINN_TWITTER_OAUTH_SECRET=YOUR_TWITTER_OAUTH_SECRET # Replaced sensitive secret
+      - DATABASE_ADAPTER=postgresql
+      - DATABASE_HOST=XX.XX.XX.64
+      - DATABASE_PORT=5432
+      - HUGINN_DATABASE_USERNAME=huginn
+      - HUGINN_DATABASE_PASSWORD=huginn # Consider using Docker secrets or a more robust solution for production
+      - HUGINN_DATABASE_NAME=huginn
+      - DO_NOT_CREATE_DATABASE=1
+      - SMTP_DOMAIN=gmail.com
+      - SMTP_USER_NAME=your_email@gmail.com # Replaced sensitive email
+      - SMTP_PASSWORD="YOUR_SMTP_PASSWORD" # Replaced sensitive password
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - SEND_EMAIL_IN_DEVELOPMENT=true
+      - EMAIL_FROM_ADDRESS=your_email@gmail.com # Replaced sensitive email
+      - HUGINN_ENV=production
+      # - TIMEZONE=Australian Eastern Standard Time
+      #     - ADDITIONAL_GEMS="huginn_http_request_agent,huginn_jsonapi_agent(git: https://github.com/yubuylov/huginn_jsonapi_agent.git)"
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.99
+    volumes:
+      - $DOCKER_PATH/huginn:/var/lib/mysql
+
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+        
+  # rss-bridge
+  rss-bridge:
+    image: rssbridge/rss-bridge
+    container_name: rssbridge
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+
+    volumes:
+      - $DOCKER_PATH/rss-bridge/whitelist/whitelist.txt:/app/whitelist.txt
+    
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.100
+    ports:
+      - 80:80
+    restart: unless-stopped
+
+  # jackett
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    profiles: ['download']    
+
+    container_name: jackett
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - AUTO_UPDATE=true
+      - RUN_OPTS=run options here
+      - UMASK=022
+
+
+    volumes:
+      - $MEDIA_PATH/jacket:/downloads
+      - $DOCKER_PATH/jackett:/config
+    
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.133
+    ports:
+      - 9117:9117
+    restart: unless-stopped
+
+  # monica
+  # monica:
+  #   image: monica
+  #   profiles: ['optional']    
+  #   container_name: monica
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #     - APP_ENV=production
+  #     - APP_DEBUG=debug
+  #     - APP_KEY=YOUR_APP_KEY # Replaced sensitive key
+  #     - HASH_SALT=YOUR_HASH_SALT # Replaced sensitive salt
+  #     - HASH_LENGTH=18
+  #     - APP_URL=http://XX.XX.XY.22
+  #     - DB_CONNECTION=mysql
+  #     - DB_HOST=XX.XX.XX.101
+  #     - DB_PORT=3306
+  #     - DB_DATABASE=monica
+  #     - DB_USERNAME=monica
+  #     - DB_PASSWORD=monica # Consider using Docker secrets or a more robust solution for production
+  #     - DB_USE_UTF8MB4=true
+  #     - MAIL_DRIVER=smtp
+  #     - MAIL_HOST=smtp.gmail.com
+  #     - MAIL_PORT=465
+  #     - MAIL_ENCRYPTION=TLS
+  #     - MAIL_USERNAME=your_email@gmail.com # Replaced sensitive email
+  #     - MAIL_PASSWORD=YOUR_MAIL_PASSWORD # Replaced sensitive password
+  #     - MAIL_FROM_ADDRESS=your_email@gmail.com # Replaced sensitive email
+  #     - MAIL_FROM_NAME=Monica instance
+  #     # - APP_EMAIL_NEW_USERS_NOTIFICATION=
+  #     - APP_DEFAULT_LOCALE=en
+  #     - APP_DISABLE_SIGNUP=false
+  #     - APP_SIGNUP_DOUBLE_OPTIN=false
+  #     - APP_TRUSTED_PROXIES=*
+
+  #   volumes:
+  #     - $DOCKER_PATH/monica:/var/www/html/storage
+    
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XY.22
+  #   ports:
+  #     - 80:80
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+
+  # babybuddy
+  # babybuddy:
+  #   image: lscr.io/linuxserver/babybuddy
+  #   # profiles: ['optional']    
+
+  #   container_name: babybuddy
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #     - CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,https://baby.yourdomain.com # Replaced sensitive domain
+  #     - CSRF_TRUSTED_ORIGINS=http://XX.XX.XX.79:3000/,https://baby.yourdomain.com # Replaced sensitive domain
+  #     - UMASK=022
+
+  #   volumes:
+  #     - $DOCKER_PATH/babybuddy:/config
+    
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.115
+  #   ports:
+  #     - 8000:8000
+  #   restart: unless-stopped
+
+  # code-server
+  code-server:
+    image: lscr.io/linuxserver/code-server
+    container_name: code-server
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - PASSWORD=YOUR_CODE_SERVER_PASSWORD # Replaced sensitive password
+      # - HASHED_PASSWORD=Di24865@Tower$Code
+      # - SUDO_PASSWORD=Di24865@Tower$Code
+      # - SUDO_PASSWORD_HASH=
+      - PROXY_DOMAIN=code.yourdomain.com # Replaced sensitive domain
+      - DEFAULT_WORKSPACE=/config/workspace
+      - UMASK=022
+
+    volumes:
+      - $DOCKER_PATH/code-server:/config
+    
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.89
+    ports:
+      - 8443:8443
+    restart: unless-stopped
+
+  #PhotoPrism
+  # photoprism:
+  #   image: photoprism/photoprism
+  #   profiles: ['optional']    
+  #   container_name: photoprism
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #     - PHOTOPRISM_UPLOAD_NSFW=true
+  #     - PHOTOPRISM_DETECT_NSFW=true
+  #     - PHOTOPRISM_SITE_TITLE=Your Photos # Replaced sensitive title
+  #     - PHOTOPRISM_SITE_CAPTION=Your Photos Caption # Replaced sensitive caption
+  #     - PHOTOPRISM_ADMIN_PASSWORD=YOUR_PHOTOPRISM_ADMIN_PASSWORD # Replaced sensitive password
+  #     - PHOTOPRISM_DATABASE_DRIVER=mysql
+  #     - PHOTOPRISM_AUTO_INDEX=180
+  #     - PHOTOPRISM_AUTO_IMPORT=180
+  #     - PHOTOPRISM_AUTH=true
+  #     - PHOTOPRISM_DATABASE_SERVER=XX.XX.XX.101:3306
+  #     - PHOTOPRISM_DATABASE_NAME=photoprism
+  #     - PHOTOPRISM_DATABASE_USER=photoprism
+  #     - PHOTOPRISM_DATABASE_PASSWORD=photoprism # Consider using Docker secrets or a more robust solution for production
+  #     - PHOTOPRISM_SETTINGS_HIDDEN=false
+  #     - PHOTOPRISM_THUMB_UNCACHED=false
+  #     - PHOTOPRISM_THUMB_SIZE=2048
+  #     - PHOTOPRISM_THUMB_SIZE_UNCACHED=7680
+  #     - PHOTOPRISM_JPEG_SIZE=7680
+  #     - PHOTOPRISM_JPEG_QUALITY=90
+  #     - PHOTOPRISM_DARKTABLE_PRESETS=false
+  #     - PHOTOPRISM_THUMB_FILTER=lanczos
+  #     - PHOTOPRISM_EXPERIMENTAL=false
+  #     - PHOTOPRISM_STORAGE_PATH=/photoprism/storage
+  #     - UMASK=022
+
+  #   volumes:
+  #     - $DOCKER_PATH/photoprism:/photoprism/storage
+  #     - $PHOTO_PATH:/photoprism/originals
+
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.113
+  #   ports:
+  #     - 2342:2342
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+
+# adminer
+  adminer:
+    image: adminer
+    # profiles: ['debug']
+    container_name: adminer
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - UMASK=022
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.103
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+
+  # linkace
+  linkace:
+    image: linkace/linkace:simple
+    container_name: linkace
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - UMASK=022
+      - DB_CONNECTION=pgsql
+      - DB_HOST=XX.XX.XX.64
+      - DB_PORT=5432
+      - DB_DATABASE=linkace
+      - DB_USERNAME=linkace
+      - DB_PASSWORD=your_linkace_db_password # Placeholder for sensitive info
+      - MAIL_FROM_ADDRESS=your_email@example.com # Placeholder for sensitive info
+      - MAIL_FROM_NAME=LinkAce
+      - MAIL_DRIVER=smtp
+      - MAIL_HOST=smtp.example.com # Placeholder for sensitive info
+      - MAIL_PORT=587
+      - MAIL_USERNAME=your_email@example.com # Placeholder for sensitive info
+      - MAIL_PASSWORD=your_mail_password # Placeholder for sensitive info
+      - MAIL_ENCRYPTION=tls
+
+    volumes:
+      - $DOCKER_PATH/linkace/logs/:/app/storage/logs
+      - $DOCKER_PATH/linkace/.env:/app/.env
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.104
+    ports:
+      - 4256:80
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # firefly
+  firefly:
+    image: fireflyiii/core:latest
+    container_name: firefly
+    # profiles: ['finance']
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - DB_CONNECTION=pgsql
+      - DB_HOST=XX.XX.XX.64
+      - DB_PORT=5432
+      - DB_DATABASE=fireflydb
+      - DB_USERNAME=firefly
+      - DB_PASSWORD=your_firefly_db_password # Placeholder for sensitive info
+      - APP_KEY=your_firefly_app_key # Placeholder for sensitive info
+      - TRUSTED_PROXIES=XX.XX.XY.1
+      - MAIL_MAILER=smtp
+      - APP_LOG_LEVEL=debug
+      - MAIL_DRIVER=smtp
+      - MAIL_HOST=smtp.example.com # Placeholder for sensitive info
+      - MAIL_PORT=587
+      - MAIL_FROM_ADDRESS=your_email@example.com # Placeholder for sensitive info
+      - MAIL_USERNAME=your_email@example.com # Placeholder for sensitive info
+      - MAIL_PASSWORD=your_mail_password # Placeholder for sensitive info
+      - MAIL_ENCRYPTION=tls
+      - APP_URL=https://firefly.lab.your.domain
+      - TRUSTED_PROXIES=**
+
+    volumes:
+      - $DOCKER_PATH/firefly/:/var/www/html/storage/upload
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.70
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # firefly data import
+  fidi:
+    image: fireflyiii/data-importer:latest
+    container_name: fidi
+    # profiles: ['finance']
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - FIREFLY_III_URL=http://XX.XX.XX.70:8080
+      - VANITY_URL=http://firefly.lab.your.domain
+      - FIREFLY_III_ACCESS_TOKEN=your_firefly_access_token # Placeholder for sensitive info
+#      - FIREFLY_III_CLIENT_ID=
+      - DB_DATABASE=fireflydb
+      - DB_USERNAME=firefly
+      - DB_PASSWORD=your_firefly_db_password # Placeholder for sensitive info
+      - APP_KEY=your_firefly_app_key # Placeholder for sensitive info
+
+    volumes:
+      - $DOCKER_PATH/firefly/:/var/www/html/storage/upload
+
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.71
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    depends_on:
+      - firefly
+
+  #firefox
+  # firefox:
+  #   image: jlesage/firefox
+  #   profiles: ['share']
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.87
+  #   ports:
+  #     - "5800:5800"
+  #   volumes:
+  #     - $DOCKER_PATH/firefox:/config:rw
+  #   environment:
+  #     - CUSTOM_RES_W=1280
+  #     - CUSTOM_RES_H=768
+  #     - UMASK=000
+  #     - TZ=$TZ
+  #   restart: unless-stopped
+
+  # neko:
+  #   image: "m1k1o/neko:chromium"
+  #   profiles: ['share']
+  #   container_name: neko
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.87
+  #   restart: "unless-stopped"
+  #   shm_size: "2gb"
+  #   # volumes:
+  #   #   - $DOCKER_PATH/niko-chromium/data:/home/neko/.config/chromium
+  #   #   - $DOCKER_PATH/niko-chromium/policies.json:/etc/chromium/policies/managed/policies.json
+
+  #   ports:
+  #     - "8080:8080"
+  #     - "52000-52100:52000-52100/udp"
+  #   cap_add:
+  #     - SYS_ADMIN
+  #   environment:
+  #     # NEKO_SCREEN: '1920x1080@30'
+  #     NEKO_PASSWORD: neko_password # Placeholder for sensitive info
+  #     NEKO_PASSWORD_ADMIN: admin_password # Placeholder for sensitive info
+  #     NEKO_EPR: 52000-52100
+  #     UMASK: 000
+  #     TZ: $TZ
+  #     NEKO_FILE_TRANSFER_ENABLED: True
+  #     # NEKO_NAT1TO1: 220.233.76.55
+  #     NEKO_IPFETCH: http://checkip.amazonaws.com
+
+  # neko-rooms:
+  #   image: "m1k1o/neko:firefox"
+  #   restart: "unless-stopped"
+  #   container_name: neko-rooms
+  #   profiles: ['share']
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.81
+  #   environment:
+  #     NEKO_SCREEN: 1920x1080@30
+  #     NEKO_PASSWORD: neko_password # Placeholder for sensitive info
+  #     NEKO_PASSWORD_ADMIN: admin_password # Placeholder for sensitive info
+  #     NEKO_EPR: 52000-52100
+  #     NEKO_ICELITE: 1
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+
+  #firefox
+  # chrome:
+  #   image: jlesage/firefox
+  #   profiles: ['web']
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.134
+  #   ports:
+  #     - "5800:5800"
+  #   volumes:
+  #     - $DOCKER_PATH/chrome:/config:rw
+  #   environment:
+  #     - CUSTOM_RES_W=1280
+  #     - CUSTOM_RES_H=768
+  #     - UMASK=000
+  #     - TZ=$TZ
+  #   restart: unless-stopped
+
+  # # NextCloud
+  # nextcloud-app:
+  #   image: nextcloud:latest
+  #   container_name: nextcloud
+  #   restart: always
+  #   volumes:
+  #       - $DOCKER_PATH/nextcloud:/var/www/html:z
+  #       - $NEXT_CLOUD_PATH:/var/www/html/data:z
+  #   environment:
+  #     - POSTGRES_DB=nextcloud
+  #     - POSTGRES_USER=nextcloud
+  #     - POSTGRES_PASSWORD=your_nextcloud_db_password # Placeholder for sensitive info
+  #     - POSTGRES_HOST=XX.XX.XX.64
+  #     - REDIS_HOST=XX.XX.XX.91
+  #     - REDIS_PORT=6379
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.73
+  #   depends_on:
+  #     - postgres
+  #     - onlyoffice-documentserver
+
+
+  # # Only office
+  # onlyoffice-documentserver:
+  #   image: onlyoffice/documentserver:latest
+  #   restart: always
+  #   container_name: onlyoffice
+  #   environment:
+  #     - JWT_ENABLED=true
+  #     - JWT_SECRET=your_jwt_secret # Placeholder for sensitive info
+  #     - DB_TYPE=postgres
+  #     - DB_HOST=XX.XX.XX.64
+  #     - DB_PORT=5432
+  #     - DB_NAME=onlyoffice
+  #     - DB_USER=onlyoffice
+  #     - AMQP_URI=amqp://guest:guest@onlyoffice-rabbitmq
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   volumes:
+  #     - $ONLY_OFFICE_PATH:/var/www/onlyoffice/Data
+  #     - $DOCKER_PATH/onlyoffice/lib:/var/lib/onlyoffice
+  #     - $DOCKER_PATH/onlyoffice/logs:/var/log/onlyoffice
+  #     - $DOCKER_PATH/onlyoffice/cache:/var/lib/onlyoffice/documentserver/App_Data/cache/files
+  #     - $DOCKER_PATH/onlyoffice/fonts:/usr/share/fonts
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.74
+  #   depends_on:
+  #     - postgres
+  #     - onlyoffice-rabbitmq
+
+  # #Rabbit MQ
+  # onlyoffice-rabbitmq:
+  #   container_name: onlyoffice-rabbitmq
+  #   image: rabbitmq
+  #   restart: always
+  #   expose:
+  #     - '5672'
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.75
+
+  #Jellyfin
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - JELLYFIN_PublishedServerUrl=jellyfin.dolu.win #optional
+      - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
+    volumes:
+      - $DOCKER_PATH/jellyfin:/config
+      - $BABY_MEDIA_PATH/tv:/data/tvshows
+      - $BABY_MEDIA_PATH/movies:/data/movies
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card0:/dev/dri/card0
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    restart: unless-stopped
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.77
+
+
+# pinchflat
+  pinchflat:
+    image: ghcr.io/kieraneglin/pinchflat:latest
+    container_name: pinchflat
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    ports:
+      - '8945:8945'
+    volumes:
+      - $DOCKER_PATH/pinchflat:/config
+      - $BABY_MEDIA_PATH/tv:/downloads
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.47
+
+  #Youtube DL
+  # ytdl_material:
+  #   container_name: ytdl_material
+  #   environment:
+  #     - ytdl_mongodb_connection_string='mongodb://XX.XX.XY.52:27017'
+  #     - ytdl_use_local_db='false'
+  #     - write_ytdl_config='true'
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #   restart: always
+  #   depends_on:
+  #       - ytdl-mongo-db
+  #   volumes:
+  #       - $DOCKER_PATH/ytdl_material/appdata:/app/appdata
+  #       - $YDL_PATH/audio:/app/audio
+  #       - $YDL_PATH/tv:/app/video
+  #       - $YDL_PATH/subscriptions:/app/subscriptions
+  #       - $DOCKER_PATH/ytdl_material/users:/app/users
+  #   ports:
+  #       - "8998:17442"
+  #   image: tzahi12345/youtubedl-material:latest
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.79
+
+  #ytdl mongo db
+  # ytdl-mongo-db:
+  #   container_name: ytdl_mongo
+  #   # If you are using a Raspberry Pi, use mongo:4.4.18
+  #   image: mongo:4
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #   logging:
+  #       driver: "none"
+  #   container_name: mongo-db
+  #   restart: always
+  #   volumes:
+  #       - $DOCKER_PATH/ytdl-mongo-db/:/data/db
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XY.52
+
+  # gitlab:
+  #   container_name: gitlab
+  #   image: gitlab/gitlab-ce:latest
+  #   profiles: ['debug']
+  #   restart: always
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #     - "22:22"
+  #   volumes:
+  #     - $DOCKER_PATH/gitlab/config:/etc/gitlab
+  #     - $DOCKER_PATH/gitlab/logs:/var/log/gitlab
+  #     - $DOCKER_PATH/gitlab/data:/var/opt/gitlab
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.80
+
+  # jenkins:
+  #   container_name: jenkins
+  #   image: jenkins/jenkins:lts
+  #   profiles: ['debug']
+  #   restart: always
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #   ports:
+  #     - "8080:8080"
+  #     - "50000:50000"
+  #   volumes:
+  #     - $DOCKER_PATH/jenkins:/var/jenkins_home
+  #   networks:
+  #     dockervlan:
+  #       ipv4_address: XX.XX.XX.81
+
+  # Planka API
+  rest-api-planka:
+    image: upuldi/planka-rest-api:latest
+    container_name: rest-api-planka
+    environment:
+      - DOCKER_USER=your_docker_user@example.com # Placeholder for sensitive info
+      - DOCKER_PASSWORD=your_docker_password # Placeholder for sensitive info
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    restart: always
+    ports:
+        - "3000:3000"
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.79
+
+  # Authentic
+  authentic-postgresql:
+    image: docker.io/library/postgres:16-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    volumes:
+      - $DOCKER_PATH/authentic/database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASS:?database password required}
+      POSTGRES_USER: ${PG_USER:-authentik}
+      POSTGRES_DB: ${PG_DB:-authentik}
+    env_file:
+      - .env
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.40
+
+  authentic-redis:
+    image: docker.io/library/redis:alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    volumes:
+      - $DOCKER_PATH/authentic/redis:/data
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.41
+
+  authentic-server:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.6.3}
+    restart: unless-stopped
+    container_name: authentik
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: XX.XX.XY.41
+      AUTHENTIK_POSTGRESQL__HOST: XX.XX.XY.40
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authenti}k
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
+    volumes:
+      - $DOCKER_PATH/authentic/media:/media
+      - $DOCKER_PATH/authentic/custom-templates:/templates
+    env_file:
+      - .env
+    ports:
+      - "${COMPOSE_PORT_HTTP:-9000}:9000"
+      - "${COMPOSE_PORT_HTTPS:-9443}:9443"
+    depends_on:
+      - authentic-postgresql
+      - authentic-redis
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.42
+
+  authentic-worker:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.6.3}
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: XX.XX.XY.41
+      AUTHENTIK_POSTGRESQL__HOST: XX.XX.XY.40
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - $DOCKER_PATH/authentic/media:/media
+      - $DOCKER_PATH/authentic/certs:/certs
+      - $DOCKER_PATH/authentic/custom-templates:/templates
+    env_file:
+      - .env
+    depends_on:
+      - authentic-postgresql
+      - authentic-redis
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.43
+
+  speedtest:
+    container_name: speedtest
+    image: henrywhitaker3/speedtest-tracker
+    ports:
+        - 8765:80
+    volumes:
+        - $DOCKER_PATH/speedtest:/config
+    environment:
+        - PUID=$PUID
+        - PGID=$PGID
+        - TZ=$TZ
+        - OOKLA_EULA_GDPR=true
+    restart: unless-stopped
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.44
+
+  # Rss reader
+  freshrss:
+    image: lscr.io/linuxserver/freshrss:latest
+    container_name: freshrss
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - $DOCKER_PATH/freshrss:/config
+    ports:
+      - 80:80
+    restart: unless-stopped
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.48
+
+  # hoarder
+  hoarder:
+    image: ghcr.io/hoarder-app/hoarder:release
+    container_name: hoarder
+    restart: unless-stopped
+    volumes:
+      - $DOCKER_PATH/hoarder:/data
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    environment:
+      MEILI_ADDR: http://XX.XX.XY.51:7700
+      BROWSER_WEB_URL: http://XX.XX.XY.50:9222
+      NEXTAUTH_SECRET: your_nextauth_secret # Placeholder for sensitive info
+      NEXTAUTH_URL: http://XX.XX.XY.49:3000
+      DISABLE_SIGNUPS: true
+
+      # OPENAI_API_KEY: ...
+      DATA_DIR: /data
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.49
+
+  chrome:
+    image: gcr.io/zenika-hub/alpine-chrome:123
+    container_name: hoarder-chrome
+    restart: unless-stopped
+    command:
+      - --no-sandbox
+      - --disable-gpu
+      - --disable-dev-shm-usage
+      - --remote-debugging-address=0.0.0.0
+      - --remote-debugging-port=9222
+      - --hide-scrollbars
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.50
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.11.1
+    container_name: hoarder-meilisearch
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: your_meili_master_key # Placeholder for sensitive info
+    volumes:
+      - $DOCKER_PATH/meilisearch:/meili_data
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.51
+
+
+# # Deepseek
+#   webui:
+#     container_name: OLLAMA-WEBUI
+#     image: ghcr.io/open-webui/open-webui:0.5
+#     volumes:
+#       - /volume1/docker/ollamadeepseek/webui:/app/backend/data:rw
+#     environment:
+#       OLLAMA_BASE_URL: http://XX.XX.XY.53:11434
+#       WEBUI_SECRET_KEY: your_webui_secret_key # Placeholder for sensitive info
+#     healthcheck:
+#       test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
+#       interval: 10s
+#       timeout: 5s
+#       retries: 3
+#       start_period: 90s
+#     ports:
+#       - 8271:8080
+#     restart: on-failure
+#     depends_on:
+#       ollama:
+#         condition: service_started
+#     networks:
+#       dockervlan:
+#         ipv4_address: XX.XX.XY.52
+
+#   ollama:
+#     container_name: OLLAMA-DEEPSEEK
+#     image: ollama/ollama:latest #For a NAS with an AMD CPU, use the following image ollama/ollama:rocm instead of ollama/ollama:latest
+#     entrypoint: ["/usr/bin/bash", "/entrypoint.sh"]
+#     volumes:
+#       - /volume1/docker/ollamadeepseek/data:/root/.ollama:rw
+#       - /volume1/docker/ollamadeepseek/entrypoint/entrypoint.sh:/entrypoint.sh
+#     environment:
+#       MODELS: deepseek-r1:1.5b #Check all the models at the following link https://ollama.com/library - You can separate models by commas like llama3.2,gemma2,mistral
+#       OLLAMA_INSTALL_MODELS: deepseek-r1:1.5b #Check all the models at the following link https://ollama.com/library - You can separate models by commas like llama3.2,gemma2,mistral
+#       OLLAMA_HOSTNAME: deepseek.dolu.win
+#     ports:
+#       - 11434:11434
+#     healthcheck:
+#       test: ["CMD", "ollama", "--version"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 3
+#       start_period: 30s
+#     restart: on-failure:5
+#     networks:
+#       dockervlan:
+#         ipv4_address: XX.XX.XY.53
+
+
+  obsidian:
+    image: lscr.io/linuxserver/obsidian:latest
+    container_name: obsidian
+    security_opt:
+      - seccomp:unconfined #optional
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    volumes:
+      - $DOCKER_PATH/obsidian/config:/config
+    ports:
+      - 3000:3000
+      - 3001:3001
+    devices:
+      - /dev/dri:/dev/dri #optional
+    shm_size: "1gb"
+    restart: unless-stopped
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.54
+    # logging:
+    #   driver: "fluentd"
+    #   options:
+    #     fluentd-address: XX.XX.XY.60:24224
+
+  splunk:
+    image: splunk/splunk:8.2 # You can specify a version, e.g., splunk/splunk:9.1.2
+    container_name: splunk
+    hostname: splunk_standalone # Set a hostname for the container
+    ports:
+      - "8000:8000" # Splunk Web UI
+      - "8088:8088" # HTTP Event Collector (HEC)
+      - "8089:8089" # Splunk Management Port (for forwarders to connect, usually)
+      - "9997:9997" # Default port for Splunk TCP data input (Universal Forwarders)
+      - "514:514/udp"
+    environment:
+      # Required to accept the Splunk license agreement
+      - SPLUNK_START_ARGS=--accept-license --answer-yes --no-prompt
+      # Set your desired admin password here. CHANGE THIS!
+      - SPLUNK_PASSWORD=your_splunk_password # Placeholder for sensitive info
+      # Setting the license URI to 'Free' ensures it starts with the free license
+      - SPLUNK_LICENSE_URI=Free
+      # Set the timezone (adjust to your local timezone, e.g., Australia/Sydney)
+      - TZ=$TZ
+      - DEBUG=true
+      - SPLUNK_HEC_TOKEN=your_hec_token # Placeholder for sensitive info
+    volumes:
+      # Persistent storage for Splunk data (indexes, logs, etc.)
+      - $DOCKER_PATH/splunk/var:/opt/splunk/var
+      # Persistent storage for Splunk configurations (apps, users, etc.)
+      - $DOCKER_PATH/splunk/etc:/opt/splunk/etc
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XX.56
+    # restart: unless-stopped # Keep the container running unless explicitly stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - $DOCKER_PATH/centralised_logs/loki:/etc/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    restart: unless-stopped
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.57
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    ports:
+      - "9080:9080"  # Ensure this line exists
+    volumes:
+      - $DOCKER_PATH/centralised_logs/promtail:/etc/promtail
+      - /var/log:/var/log  # Synology system logs
+      - /volume1/docker/nginxl/data/logs:/var/npm-local-logs:ro
+      - /volume1/docker/nginx/log:/var/npm-public-logs:ro
+      - /volume1/@docker/containers:/var/docker/log:ro
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    restart: unless-stopped
+    depends_on:
+      - loki
+      - splunk
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.58
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - $DOCKER_PATH/centralised_logs/grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    depends_on:
+      - loki
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.59
+
+  fluent-bit:
+    image: cr.fluentbit.io/fluent/fluent-bit:latest
+    container_name: fluent-bit
+    ports:
+      - "2021:2021"
+      - "24224:24224"
+    volumes:
+      - $DOCKER_PATH/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - /volume1/@docker/containers:/var/docker/log:ro
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - $DOCKER_PATH/fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf
+      - $DOCKER_PATH/fluent-bit/log:/var/log/
+    restart: unless-stopped
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.60
+
+  # n8n - Workflow automation tool
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: always
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.61 # Assigning a new IP in the XX.XX.XY.x range
+    ports:
+      - 5678:5678
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres.lab.your.domain
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_SCHEMA=n8n
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=your_n8n_db_password # Placeholder for sensitive info
+      - N8N_HOST=n8n.dolu.win
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://n8n.dolu.win/
+      - WEBHOOK_TUNNEL_URL=https://n8n.dolu.win/
+      - VUE_APP_URL_BASE_API=https://n8n.dolu.win/
+      - N8N_EDITOR_BASE_URL=https://n8n.dolu.win/
+      - GENERIC_TIMEZONE=$TZ
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_TEMPLATES_ENABLED=true
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    volumes:
+      - $DOCKER_PATH/n8n/data:/home/node/.n8n
+      - $DOCKER_PATH/n8n/files:/files
+
+
+  elasticsearch:
+    image: elasticsearch:7.9.1
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.62
+    volumes:
+      -  $DOCKER_PATH/elasticsearch/data:/usr/share/elasticsearch/data/
+      # - ./elk-config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    environment:
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - transport.host=0.0.0.0
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - cluster.name=elasticsearch
+      - bootstrap.memory_lock=true
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+
+  kibana:
+    image: kibana:7.9.1
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      dockervlan:
+        ipv4_address: XX.XX.XY.63
+    volumes:
+      - $DOCKER_PATH/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - $DOCKER_PATH/kibana/data:/usr/share/kibana/data
+    depends_on:
+      - elasticsearch
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+
+
+
+# 29.70 - Towner Splunk
+
+networks:
+  dockervlan:
+    driver: macvlan
+    driver_opts:
+      parent: ovs_eth0  # Replace with your actual interface
+      macvlan_mode: bridge
+    ipam:
+      config:
+        - subnet: "XX.XX.XX.0/20"
+          gateway: "XX.XX.XX.1"
+          aux_addresses:
+            host: "XX.XX.XX.166"  # Your NAS host IP
+
+  host_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.29.0.1/24"
+          ip_range: "172.29.0.1/24"
+          gateway: "172.29.0.1"
