@@ -252,12 +252,54 @@ Below is a list of the services defined in the `docker-compose.yaml` file, their
 
 *   `autoheal`
     
-    *   **Image:** willfarrell/autoheal
+    *   **Image:** `willfarrell/autoheal`
         
     *   **Purpose:** Automatically restarts unhealthy Docker containers based on their healthchecks.
         
-*   `**watchtower**`
+*   `watchtower`
     
-    *   **Image:** containrrr/watchtower
+    *   **Image:** `containrrr/watchtower`
         
     *   **Purpose:** Monitors running Docker containers and automatically updates them to their latest image versions.
+    
+*   `dozzle`
+    
+    *   **Image:** `amir20/dozzle`
+        
+    *   **Purpose:** A real-time log viewer for Docker containers, accessible via a web interface.
+        
+*   `ddns-updater`
+    
+    *   **Image:** `qmcgaw/ddns-updater`
+        
+    *   **Purpose:** Dynamically updates DNS records for your domain with your current public IP address.
+        
+*   `postgres`
+    
+    *   **Image:** `postgres:15.1`
+        
+    *   **Purpose:** A robust relational database server, serving as the backend for many applications (Wiki.js, Firefly III, Planka, Authentik, n8n, etc.).
+        
+*   `redis`
+    
+    *   **Image:** `redis`
+        
+    *   **Purpose:** An in-memory data structure store, used as a cache and message broker for services like Paperless-ngx.
+        
+*   `tika`
+    
+    *   **Image:** `apache/tika`
+        
+    *   **Purpose:** Apache Tika is a content analysis toolkit that detects and extracts metadata and text from various document types, used by Paperless-ngx.
+        
+*   `gotenberg`
+    
+    *   **Image:** `docker.io/gotenberg:8.7`
+        
+    *   **Purpose:** A Docker-powered API for converting various document formats (HTML, Markdown, Office documents) into PDF files, used by Paperless-ngx.
+        
+*   `adminer`
+    
+    *   **Image:** `adminer`
+        
+    *   **Purpose:** A full-featured database management tool for managing various databases (PostgreSQL, MySQL, SQLite, etc.) via a web interface.
