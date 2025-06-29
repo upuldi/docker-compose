@@ -145,93 +145,93 @@ First, clone this repository to your local machine:
 Here's an example of what your .env file might look like. **Replace all placeholder values with your actual, secure information.**
 
 ``` plaintext
-    # User and Group IDs (find with 'id -u' and 'id -g' on your host)
-    PUID=1000
-    PGID=100
+# User and Group IDs (find with 'id -u' and 'id -g' on your host)
+PUID=1000
+PGID=100
 
-    # Timezone (e.g., Europe/London, America/New_York, Australia/Sydney)
-    TZ=Australia/Sydney
+# Timezone (e.g., Europe/London, America/New_York, Australia/Sydney)
+TZ=Australia/Sydney
 
-    # Base paths for Docker volumes
-    DOCKER_PATH=/path/to/your/docker/data
-    DOCKER_BACKUP_PATH=/path/to/your/docker-backups
-    MEDIA_PATH=/path/to/your/media
-    MEDIA_PATH_TOWER_SHARE=/path/to/your/media-tower
-    MEDIA_PATH_TV=/path/to/your/media/tv
-    MEDIA_PATH_MUSIC=/path/to/your/media/music
-    MEDIA_PATH_AUDIO=/path/to/your/media/audiobooks
-    MEDIA_PATH_BOOKS=/path/to/your/media/ebooks
-    PHOTO_PATH=/path/to/your/user/photos
-    NEXT_CLOUD_PATH=/path/to/your/user/nextcloud
-    ONLY_OFFICE_PATH=/path/to/your/user/onlyoffice
-    BABY_MEDIA_PATH=/path/to/your/baby_media # Example path, adjust as needed
-    YDL_PATH=/path/to/your/youtube_dl_data
-    DOCUMENT_PATH=/path/to/your/documents/
+# Base paths for Docker volumes
+DOCKER_PATH=/path/to/your/docker/data
+DOCKER_BACKUP_PATH=/path/to/your/docker-backups
+MEDIA_PATH=/path/to/your/media
+MEDIA_PATH_TOWER_SHARE=/path/to/your/media-tower
+MEDIA_PATH_TV=/path/to/your/media/tv
+MEDIA_PATH_MUSIC=/path/to/your/media/music
+MEDIA_PATH_AUDIO=/path/to/your/media/audiobooks
+MEDIA_PATH_BOOKS=/path/to/your/media/ebooks
+PHOTO_PATH=/path/to/your/user/photos
+NEXT_CLOUD_PATH=/path/to/your/user/nextcloud
+ONLY_OFFICE_PATH=/path/to/your/user/onlyoffice
+BABY_MEDIA_PATH=/path/to/your/baby_media # Example path, adjust as needed
+YDL_PATH=/path/to/your/youtube_dl_data
+DOCUMENT_PATH=/path/to/your/documents/
 
-    # Downloads
-    DOWNLOADS=/path/to/your/downloads/complete
-    INCOMPLETE=/path/to/your/downloads/incomplete
+# Downloads
+DOWNLOADS=/path/to/your/downloads/complete
+INCOMPLETE=/path/to/your/downloads/incomplete
 
-    # Watchtower
-    WT_INTERVAL=21600 # Update interval in seconds (e.g., 21600 for 6 hours)
-    # WATCHTOWER_NOTIFICATION_URL="pushover://shoutrrr:YOUR_PUSHOVER_APP_API_SECRET@YOUR_PUSHOVER_USER_API_SECRET/?devices=YOUR_PUSHOVER_DEVICE telegram://YOUR_TELEGRAM_BOT_TOKEN@telegram?channels=YOUR_TELEGRAM_CHAT_ID pushbullet://YOUR_PUSHBULLET_API_SECRET"
+# Watchtower
+WT_INTERVAL=21600 # Update interval in seconds (e.g., 21600 for 6 hours)
+# WATCHTOWER_NOTIFICATION_URL="pushover://shoutrrr:YOUR_PUSHOVER_APP_API_SECRET@YOUR_PUSHOVER_USER_API_SECRET/?devices=YOUR_PUSHOVER_DEVICE telegram://YOUR_TELEGRAM_BOT_TOKEN@telegram?channels=YOUR_TELEGRAM_CHAT_ID pushbullet://YOUR_PUSHBULLET_API_SECRET"
 
-    # Authentik Specific
-    PG_USER=authentik
-    PG_PASS=your_authentik_db_password
-    AUTHENTIK_SECRET_KEY=your_authentik_secret_key
-    AUTHENTIK_ERROR_REPORTING__ENABLED=true
-    AUTHENTIK_EMAIL__HOST=smtp.example.com
-    AUTHENTIK_EMAIL__PORT=587
-    AUTHENTIK_EMAIL__USERNAME=your_email@example.com
-    AUTHENTIK_EMAIL__PASSWORD=your_email_password
-    AUTHENTIK_EMAIL__USE_TLS=true
-    AUTHENTIK_EMAIL__USE_SSL=false
-    AUTHENTIK_EMAIL__TIMEOUT=10
-    AUTHENTIK_EMAIL__FROM=your_email@example.com
+# Authentik Specific
+PG_USER=authentik
+PG_PASS=your_authentik_db_password
+AUTHENTIK_SECRET_KEY=your_authentik_secret_key
+AUTHENTIK_ERROR_REPORTING__ENABLED=true
+AUTHENTIK_EMAIL__HOST=smtp.example.com
+AUTHENTIK_EMAIL__PORT=587
+AUTHENTIK_EMAIL__USERNAME=your_email@example.com
+AUTHENTIK_EMAIL__PASSWORD=your_email_password
+AUTHENTIK_EMAIL__USE_TLS=true
+AUTHENTIK_EMAIL__USE_SSL=false
+AUTHENTIK_EMAIL__TIMEOUT=10
+AUTHENTIK_EMAIL__FROM=your_email@example.com
 
-    # Plex Specific
-    HOST_NAME=your_plex_server_name
-    PLEX_CLAIM_TOKEN=your_plex_claim_token
-    PLEX_CLAIM_TOKEN_AUDIO=your_plex_audio_claim_token
-    ADVERTISE_IP= # e.g., http://192.168.1.100:32400 (leave blank if not applicable)
-    ADVERTISE_IP_AUDIO= # e.g., http://192.168.1.100:32400 (leave blank if not applicable)
-    ALLOWED_NETWORKS=10.27.28.0/24 # Comma-separated list of allowed networks/IPs
+# Plex Specific
+HOST_NAME=your_plex_server_name
+PLEX_CLAIM_TOKEN=your_plex_claim_token
+PLEX_CLAIM_TOKEN_AUDIO=your_plex_audio_claim_token
+ADVERTISE_IP= # e.g., http://192.168.1.100:32400 (leave blank if not applicable)
+ADVERTISE_IP_AUDIO= # e.g., http://192.168.1.100:32400 (leave blank if not applicable)
+ALLOWED_NETWORKS=10.27.28.0/24 # Comma-separated list of allowed networks/IPs
 
-    # Hoarder / Meilisearch
-    NEXTAUTH_SECRET=your_nextauth_secret
-    MEILI_MASTER_KEY=your_meili_master_key
-    NEXTAUTH_URL=http://10.27.29.49:3000 # Update with your Hoarder URL/IP
+# Hoarder / Meilisearch
+NEXTAUTH_SECRET=your_nextauth_secret
+MEILI_MASTER_KEY=your_meili_master_key
+NEXTAUTH_URL=http://10.27.29.49:3000 # Update with your Hoarder URL/IP
 
-    # Other Passwords/Tokens (Ensure these are set if corresponding services are enabled)
-    YOUR_LINKACE_DB_PASSWORD=
-    YOUR_MAIL_PASSWORD= # Generic mail password for various services
-    YOUR_FIREFLY_DB_PASSWORD=
-    YOUR_FIREFLY_APP_KEY=
-    YOUR_FIREFLY_ACCESS_TOKEN=
-    YOUR_DOCKER_USER= # For Docker Hub authentication (e.g., rest-api-planka)
-    YOUR_DOCKER_PASSWORD= # For Docker Hub authentication (e.g., rest-api-planka)
-    YOUR_WEBUI_SECRET_KEY= # For Deepseek/Ollama webui if enabled
-    YOUR_SPLUNK_PASSWORD=
-    YOUR_HEC_TOKEN=
-    YOUR_N8N_DB_PASSWORD=
-    YOUR_PGADMIN_PASSWORD=
-    YOUR_CODE_SERVER_PASSWORD=
+# Other Passwords/Tokens (Ensure these are set if corresponding services are enabled)
+YOUR_LINKACE_DB_PASSWORD=
+YOUR_MAIL_PASSWORD= # Generic mail password for various services
+YOUR_FIREFLY_DB_PASSWORD=
+YOUR_FIREFLY_APP_KEY=
+YOUR_FIREFLY_ACCESS_TOKEN=
+YOUR_DOCKER_USER= # For Docker Hub authentication (e.g., rest-api-planka)
+YOUR_DOCKER_PASSWORD= # For Docker Hub authentication (e.g., rest-api-planka)
+YOUR_WEBUI_SECRET_KEY= # For Deepseek/Ollama webui if enabled
+YOUR_SPLUNK_PASSWORD=
+YOUR_HEC_TOKEN=
+YOUR_N8N_DB_PASSWORD=
+YOUR_PGADMIN_PASSWORD=
+YOUR_CODE_SERVER_PASSWORD=
 
-    # Authentik Image (Optional - if you want to pin a specific version)
-    # AUTHENTIK_IMAGE=ghcr.io/goauthentik/server
-    # AUTHENTIK_TAG=2024.6.3
+# Authentik Image (Optional - if you want to pin a specific version)
+# AUTHENTIK_IMAGE=ghcr.io/goauthentik/server
+# AUTHENTIK_TAG=2024.6.3
 
-    # Docker Network Configuration (adjust parent and subnet for your network)
-    # For macvlan:
-    # MACVLAN_PARENT_INTERFACE=ovs_eth0 # Example: replace with your host's network interface (e.g., eth0, enpXs0)
-    # MACVLAN_SUBNET="10.27.28.0/20"
-    # MACVLAN_GATEWAY="10.27.28.1"
-    # MACVLAN_AUX_ADDRESS_HOST="10.27.28.166"
-    # For host_network (bridge):
-    # BRIDGE_SUBNET="172.29.0.1/24"
-    # BRIDGE_IP_RANGE="172.29.0.1/24"
-    # BRIDGE_GATEWAY="172.29.0.1"
+# Docker Network Configuration (adjust parent and subnet for your network)
+# For macvlan:
+# MACVLAN_PARENT_INTERFACE=ovs_eth0 # Example: replace with your host's network interface (e.g., eth0, enpXs0)
+# MACVLAN_SUBNET="10.27.28.0/20"
+# MACVLAN_GATEWAY="10.27.28.1"
+# MACVLAN_AUX_ADDRESS_HOST="10.27.28.166"
+# For host_network (bridge):
+# BRIDGE_SUBNET="172.29.0.1/24"
+# BRIDGE_IP_RANGE="172.29.0.1/24"
+# BRIDGE_GATEWAY="172.29.0.1"
 ```
 ### 3\. Deploy Services
 Once your .env file is configured, you can deploy the services using Docker Compose:
@@ -246,4 +246,4 @@ To start specific services (e.g., only media-related ones if you've used profile
 
 Service Breakdown
 ------------------
-Below is a list of the services defined in the docker-compose.yaml file, their Docker images, and their primary purpose.
+Below is a list of the services defined in the `docker-compose.yaml` file, their Docker images, and their primary purpose.
