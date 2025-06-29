@@ -616,3 +616,43 @@ Usage and Management
 *   **View logs for a specific service (e.g., `plex`):** ```bash docker-compose logs -f plex      ```
 *   **Restart a service (e.g., `radarr`):** ```bash docker-compose restart radarr     ```
 *   **Update all images and recreate containers (pulls latest image and rebuilds):** ```bash docker-compose pull && docker-compose up -d --remove-orphans   ```
+
+
+Troubleshooting
+---------------
+
+*   **Container not starting:**
+    
+    *   Check docker-compose logs for error messages.
+        
+    *   Verify your .env file for correct sensitive values and paths.
+        
+    *   Ensure port conflicts are not occurring (check ports section in docker-compose.yaml and host netstat -tuln).
+        
+*   **macvlan issues:**
+    
+    *   Double-check the parent interface name in the dockervlan network configuration. It must exactly match an active network interface on your host.
+        
+    *   Ensure the subnet and gateway are correctly configured for your home network. The assigned ipv4\_address for containers must be outside your router's DHCP range but within the defined subnet.
+        
+    *   Verify your firewall rules on the host; macvlan traffic bypasses the host's networking stack directly.
+        
+*   **Permissions issues:**
+    
+    *   Ensure the PUID and PGID in your .env file match a user and group on your host that has appropriate read/write permissions to the mounted volumes.
+        
+    *   Check volume mount paths in docker-compose.yaml to ensure they exist and are accessible from the Docker daemon.
+        
+
+Customization
+-------------
+
+*   **Enable/Disable Services:** Comment out or uncomment service blocks as desired.
+    
+*   **Adjust Resource Limits:** For services like bazarr that have mem\_limit and mem\_reservation, you can adjust these to control resource usage on your host.
+    
+*   **Modify Ports:** Change the ports mappings (e.g., HOST\_PORT:CONTAINER\_PORT) to suit your needs.
+    
+*   **Update Images:** Change image:tag to pin specific versions or use latest (with caution for production).
+    
+*   **Add New Services:** Integrate additional Docker services by defining them in the services section.
