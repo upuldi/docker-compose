@@ -247,3 +247,17 @@ To start specific services (e.g., only media-related ones if you've used profile
 Service Breakdown
 ------------------
 Below is a list of the services defined in the `docker-compose.yaml` file, their Docker images, and their primary purpose.
+
+### Core Infrastructure
+
+*   **autoheal**
+    
+    *   **Image:** willfarrell/autoheal
+        
+    *   **Purpose:** Automatically restarts unhealthy Docker containers based on their healthchecks.
+        
+*   **watchtower**
+    
+    *   **Image:** containrrr/watchtower
+        
+    *   **Purpose:** Monitors running Docker containers and automatically updates them to their latest image versions.
