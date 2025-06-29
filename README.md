@@ -361,9 +361,7 @@ Below is a list of the services defined in the `docker-compose.yaml` file, their
     
     *   **Image:** linuxserver/plex
         
-    *   **Purpose:** A dedicated Plex instance for organizing and streaming your audiobook collection
-
-*   on.
+    *   **Purpose:** A dedicated Plex instance for organizing and streaming your audiobook collection.
     
 
 ### Financial & Productivity Tools
@@ -544,3 +542,48 @@ Below is a list of the services defined in the `docker-compose.yaml` file, their
     *   **Image:** lscr.io/linuxserver/code-server
         
     *   **Purpose:** Runs VS Code in your browser, allowing you to access a full development environment from any device.
+
+### Optional/Disabled Services
+
+The docker-compose.yaml file includes several commented-out services that you can enable if needed. Their purposes are:
+
+*   **portainer**: A Docker management UI for easily managing your containers, images, volumes, and networks.
+    
+*   **bazarr**: Companion application to Sonarr and Radarr that manages and downloads subtitles.
+    
+*   **posterr**: (Purpose unclear from name, likely related to media metadata or social posting.)
+    
+*   **gaps**: Finds missing movies in Plex libraries.
+    
+*   **mysql**: A relational database server, an alternative to PostgreSQL.
+    
+*   **firefox (jlesage/firefox)**: A desktop Firefox browser accessible via a web interface (VNC).
+    
+*   **neko (Chromium/Firefox)**: A tool for self-hosting a browser with shared control, useful for remote presentations or collaborative browsing.
+    
+*   **nextcloud-app**: A self-hosted file sync and share solution, like a personal Dropbox.
+    
+*   **onlyoffice-documentserver**: A powerful online office suite for collaborative document editing, often integrated with Nextcloud.
+    
+*   **onlyoffice-rabbitmq**: A message broker used by OnlyOffice.
+    
+*   **ytdl\_material**: A web UI for youtube-dl (or yt-dlp), allowing you to download videos from various platforms.
+    
+*   **ytdl-mongo-db**: The MongoDB backend for ytdl\_material.
+    
+*   **gitlab**: A complete DevOps platform, including Git repository management, CI/CD, and more.
+    
+*   **jenkins**: An open-source automation server for building, testing, and deploying software.
+    
+*   **monica**: A personal relationship management (PRM) system to keep track of your interactions with friends and family.
+    
+*   **babybuddy**: A web application to help parents track their baby's activities (feedings, diaper changes, sleep, etc.).
+    
+*   **photoprism**: An AI-powered app for browsing, organizing, and sharing your photo collection.
+    
+*   **webui (for Deepseek/Ollama)**: A web user interface for interacting with large language models (LLMs) served by Ollama.
+    
+*   **ollama**: Runs large language models locally on your machine.
+    
+
+To enable any of these, simply uncomment their respective sections in the docker-compose.yaml file and ensure all necessary environment variables are set in your .env file.
