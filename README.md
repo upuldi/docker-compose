@@ -608,8 +608,8 @@ The docker-compose.yaml defines two custom networks:
 Usage and Management
 --------------------
 
-*   ```bash docker-compose up -d  ```
-*   ```bash docker-compose --profile download up -d   ```   
+*  **Start all services:**  ```bash docker-compose up -d  ```
+*   **Start specific services (e.g., download services):** ```bash docker-compose --profile download up -d   ```   
 *   ```bash docker-compose down      ```
 *   ```bash docker-compose down -v # Use -v to remove anonymous volumes too      ```
 *   ```bash docker-compose logs -f      ```
