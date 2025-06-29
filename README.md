@@ -165,7 +165,6 @@ Here's an example of what your .env file might look like. **Replace all placehol
     ONLY_OFFICE_PATH=/path/to/your/user/onlyoffice
     BABY_MEDIA_PATH=/path/to/your/baby_media # Example path, adjust as needed
     YDL_PATH=/path/to/your/youtube_dl_data
-    DEBUG_STASH_PATH=/path/to/your/stash_data # Example path, adjust as needed
     DOCUMENT_PATH=/path/to/your/documents/
 
     # Downloads
@@ -232,3 +231,18 @@ Here's an example of what your .env file might look like. **Replace all placehol
     # BRIDGE_SUBNET="172.29.0.1/24"
     # BRIDGE_IP_RANGE="172.29.0.1/24"
     # BRIDGE_GATEWAY="172.29.0.1"
+
+### 3\. Deploy Services
+Once your .env file is configured, you can deploy the services using Docker Compose:
+
+    docker-compose up -d
+
+This command will download the necessary Docker images, create the containers, and start them in the background.
+
+To start specific services (e.g., only media-related ones if you've used profiles):
+
+    docker-compose --profile download up -d
+
+Service Breakdown
+------------------
+Below is a list of the services defined in the docker-compose.yaml file, their Docker images, and their primary purpose.
