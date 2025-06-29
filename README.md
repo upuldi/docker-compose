@@ -222,16 +222,7 @@ YOUR_CODE_SERVER_PASSWORD=
 # AUTHENTIK_IMAGE=ghcr.io/goauthentik/server
 # AUTHENTIK_TAG=2024.6.3
 
-# Docker Network Configuration (adjust parent and subnet for your network)
-# For macvlan:
-# MACVLAN_PARENT_INTERFACE=ovs_eth0 # Example: replace with your host's network interface (e.g., eth0, enpXs0)
-# MACVLAN_SUBNET="10.27.28.0/20"
-# MACVLAN_GATEWAY="10.27.28.1"
-# MACVLAN_AUX_ADDRESS_HOST="10.27.28.166"
-# For host_network (bridge):
-# BRIDGE_SUBNET="172.29.0.1/24"
-# BRIDGE_IP_RANGE="172.29.0.1/24"
-# BRIDGE_GATEWAY="172.29.0.1"
+
 ```
 ### 3\. Deploy Services
 Once your .env file is configured, you can deploy the services using Docker Compose:
@@ -303,3 +294,71 @@ Below is a list of the services defined in the `docker-compose.yaml` file, their
     *   **Image:** `adminer`
         
     *   **Purpose:** A full-featured database management tool for managing various databases (PostgreSQL, MySQL, SQLite, etc.) via a web interface.
+
+### Media Management
+
+*   `prowlarr`
+    
+    *   **Image:** `linuxserver/prowlarr:nightly`
+        
+    *   **Purpose:** An indexer manager for your media libraries, integrating with your download clients and other media management tools.
+        
+*   `radarr`
+    
+    *   **Image:** `linuxserver/radarr:latest`
+        
+    *   **Purpose:** Movie collection manager for Usenet and BitTorrent users. It monitors RSS feeds for new movies and interacts with download clients.
+        
+*   `sonarr`
+    
+    *   **Image:** `lscr.io/linuxserver/sonarr:latest`
+        
+    *   **Purpose:** TV series management tool that monitors RSS feeds for new episodes and interacts with download clients.
+        
+*   `lidarr`
+    
+    *   **Image:** `linuxserver/lidarr:nightly`
+        
+    *   **Purpose:** Music collection manager for Usenet and BitTorrent users. It monitors for new music releases and interacts with download clients.
+        
+*   `readarr`
+    
+    *   **Image:** `lscr.io/linuxserver/readarr:develop`
+        
+    *   **Purpose:** eBook collection manager for Usenet and BitTorrent users, similar to Radarr and Sonarr but for books.
+        
+*   `qbittorrent`
+    
+    *   **Image:** `lscr.io/linuxserver/qbittorrent:latest`
+        
+    *   **Purpose:** A popular BitTorrent client with a web UI for managing downloads.
+        
+*   `jellyfin`
+    
+    *   **Image:** `lscr.io/linuxserver/jellyfin:latest`
+        
+    *   **Purpose:** A free software media system that lets you control your media from anywhere. It's an alternative to Plex or Emby.
+        
+*   `pinchflat`
+    
+    *   **Image:** `ghcr.io/kieraneglin/pinchflat:latest`
+        
+    *   **Purpose:** Appears to be a media downloading/processing tool, likely used for specific media types or automation.
+        
+*   `jackett`
+    
+    *   **Image:** `lscr.io/linuxserver/jackett:latest`
+        
+    *   **Purpose:** Acts as a proxy server for popular public and private torrent trackers, providing a single API for various indexers.
+        
+*   `plex`
+    
+    *   **Image:** `linuxserver/plex`
+        
+    *   **Purpose:** A comprehensive media server for organizing, playing, and streaming your movies, TV shows, music, and photos.
+        
+*   `plex\_audio`
+    
+    *   **Image:** linuxserver/plex
+        
+    *   **Purpose:** A dedicated Plex instance for organizing and streaming your audiobook collecti
