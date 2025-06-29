@@ -609,10 +609,10 @@ Usage and Management
 --------------------
 
 *  **Start all services:**  ```bash docker-compose up -d  ```
-*   **Start specific services (e.g., download services):** ```bash docker-compose --profile download up -d   ```   
-*   ```bash docker-compose down      ```
-*   ```bash docker-compose down -v # Use -v to remove anonymous volumes too      ```
-*   ```bash docker-compose logs -f      ```
-*   ```bash docker-compose logs -f plex      ```
-*   ```bash docker-compose restart radarr     ```
-*   ```bash docker-compose pull && docker-compose up -d --remove-orphans   ```
+*  **Start specific services (e.g., download services):** ```bash docker-compose --profile download up -d   ```   
+*  **Stop all services:** ```bash docker-compose down      ```
+*  **Stop and remove containers, networks, and volumes (data volumes are preserved by default):** ```bash docker-compose down -v # Use -v to remove anonymous volumes too      ```
+*   **View logs for all services:** ```bash docker-compose logs -f      ```
+*   **View logs for a specific service (e.g., `plex`):** ```bash docker-compose logs -f plex      ```
+*   **Restart a service (e.g., `radarr`):** ```bash docker-compose restart radarr     ```
+*   **Update all images and recreate containers (pulls latest image and rebuilds):** ```bash docker-compose pull && docker-compose up -d --remove-orphans   ```
