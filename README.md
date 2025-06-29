@@ -144,6 +144,7 @@ First, clone this repository to your local machine:
 
 Here's an example of what your .env file might look like. **Replace all placeholder values with your actual, secure information.**
 
+``` plaintext
     # User and Group IDs (find with 'id -u' and 'id -g' on your host)
     PUID=1000
     PGID=100
@@ -231,7 +232,7 @@ Here's an example of what your .env file might look like. **Replace all placehol
     # BRIDGE_SUBNET="172.29.0.1/24"
     # BRIDGE_IP_RANGE="172.29.0.1/24"
     # BRIDGE_GATEWAY="172.29.0.1"
-
+```
 ### 3\. Deploy Services
 Once your .env file is configured, you can deploy the services using Docker Compose:
 
