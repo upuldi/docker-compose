@@ -134,7 +134,7 @@ Setup Instructions
 
 First, clone this repository to your local machine:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   git clone https://github.com/your-username/your-repo-name.git  cd your-repo-name   `
+`   git clone https://github.com/your-username/your-repo-name.git  cd your-repo-name   `
 
 ### 2\. Configure Environment Variables
 
