@@ -1,0 +1,40 @@
+[SERVICE]
+    flush:        1
+    log_level:    debug
+    daemon:       off
+    http_server: on
+    http_listen: 0.0.0.0
+    http_port: 2021
+    hot_reload: on
+    Parsers_File /fluent-bit/etc/parsers.conf
+
+[INPUT]
+    Name forward
+    Listen 0.0.0.0
+    Port 24224
+    Buffer_Chunk_Size 1M
+    Buffer_Max_Size 6M
+
+[FILTER]
+    Name nest
+    Match *
+    Operation nest
+    Wildcard *
+    Nest_under event
+
+# add event metadata
+[FILTER]
+    Name      modify
+    Match     *
+    Add index main
+    Add host  docker-host  
+
+[OUTPUT]
+    name         splunk
+    match        *
+    host         XX.XX.XX.XX
+    port         8088
+    splunk_token XXXXXX
+    splunk_send_raw On
+    TLS           on
+    TLS.Verify    off

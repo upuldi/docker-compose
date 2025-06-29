@@ -1,0 +1,67 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://XX.XX.XX.XX:3100/loki/api/v1/push
+    name: loki_client
+
+scrape_configs:
+  - job_name: docker_log_scrape
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+        # filters:
+        #   - name: label
+        #     values: ["logging.promtail=true"]
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'logstream'
+      - source_labels: ['__meta_docker_container_label_logging_jobname']
+        target_label: 'job'
+
+
+  - job_name: npml-access-local
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: npml-access-local
+          log_type: nginx
+          __path__: /var/npm-local-logs/proxy-host-*_access.log  # Actual log path
+    pipeline_stages:
+      - regex:
+          expression: '^\[(?P<timestamp>[^\]]+)\] - (?P<status>\d+) \d+ - (?P<method>\S+) (?P<scheme>\S+) (?P<domain>[^\s]+) "(?P<path>[^"]+)" \[Client (?P<client_ip>[^\]]+)\] \[Length (?P<length>\d+)\] \[Gzip (?P<gzip>[^\]]+)\] \[Sent-to (?P<backend_ip>[^\]]+)\] "(?P<user_agent>[^"]*)" "(?P<referer>[^"]*)"'
+      - labels:
+          status:
+          method:
+          domain:
+          scheme:
+      - timestamp:
+          source: timestamp
+          format: "02/Jan/2006:15:04:05 -0700"  # Matches your format
+
+
+  - job_name: npml-access-public
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: npml-access-public
+          log_type: nginx
+          __path__: /var/npm-public-logs/proxy-host-*_access.log  # Actual log path
+    pipeline_stages:
+      - regex:
+          expression: '^\[(?P<timestamp>[^\]]+)\] - (?P<status>\d+) \d+ - (?P<method>\S+) (?P<scheme>\S+) (?P<domain>[^\s]+) "(?P<path>[^"]+)" \[Client (?P<client_ip>[^\]]+)\] \[Length (?P<length>\d+)\] \[Gzip (?P<gzip>[^\]]+)\] \[Sent-to (?P<backend_ip>[^\]]+)\] "(?P<user_agent>[^"]*)" "(?P<referer>[^"]*)"'
+      - labels:
+          status:
+          method:
+          domain:
+          scheme:
+      - timestamp:
+          source: timestamp
+          format: "02/Jan/2006:15:04:05 -0700"  # Matches your format          
