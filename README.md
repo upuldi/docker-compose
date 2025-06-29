@@ -5,43 +5,24 @@ This repository contains a Docker Compose configuration for deploying a variety 
 ## Table of Contents
 
 1.  [Project Overview](#project-overview)
-
 2.  [Home Lab Architecture](#home-lab-architecture)
-
 3.  [Features](#features)
-
 4.  [Prerequisites](#prerequisites)
-
 5.  [Setup Instructions](#setup-instructions)
-
     * [1. Clone the Repository](#1-clone-the-repository)
-
     * [2. Configure Environment Variables](#2-configure-environment-variables)
-
     * [3. Deploy Services](#3-deploy-services)
-
 6.  [Service Breakdown](#service-breakdown)
-
     * [Core Infrastructure](#core-infrastructure)
-
     * [Media Management](#media-management)
-
     * [Financial & Productivity Tools](#financial--productivity-tools)
-
     * [Logging & Monitoring](#logging--monitoring)
-
     * [Identity & Access Management](#identity--access-management)
-
     * [Utilities & Development](#utilities--development)
-
     * [Optional/Disabled Services](#optionaldisabled-services)
-
 7.  [Network Configuration](#network-configuration)
-
 8.  [Usage and Management](#usage-and-management)
-
 9.  [Troubleshooting](#troubleshooting)
-
 10. [Customization](#customization)
 
 ## Project Overview
@@ -56,18 +37,12 @@ This Docker Compose setup is designed to integrate into a robust home lab enviro
 The architecture is structured as follows:
 
 *   **External Network Layer**    
-    *   **Internet Traffic** flows through **Cloudflare** (acting as DNS, Proxy, and Firewall).
-        
-    *   **Cloudflare** directs traffic to the home lab's gateway.
-        
+    *   **Internet Traffic** flows through **Cloudflare** (acting as DNS, Proxy, and Firewall).    
+    *   **Cloudflare** directs traffic to the home lab's gateway.        
 *   **Internal Network Gateway**
-    
     *   **pfSense Firewall** serves as the central security and routing appliance.
-        
         *   **Responsibilities:** Intrusion Prevention/Detection (IPS/IDS), local DNS resolution, and hosting a **WireGuard VPN** server for secure remote access.
-            
         *   **Connects to:** All internal hosts and provides a secure tunnel for remote devices.
-            
 *   **Internal Hosts & Services**
     
     *   **Synology NAS (Primary Docker Host):**
