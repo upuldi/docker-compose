@@ -91,17 +91,17 @@ The architecture is structured as follows:
 +---------------------------------+
               |
 +-------------v-------------+
-|      pfSense Firewall     |
-| (IPS/IDS, DNS, WireGuard) |
-+-------------+-------------+
-              |
-              +----------------------------------+----------------------------------+
+|      pfSense Firewall     |<------------------------------------------------------+
+| (IPS/IDS, DNS, WireGuard) |                                                       |
++-------------+-------------+                                                       |
+              |                                                                     |
+              +----------------------------------+                                  |
               |                                  |                                  |
               v                                  v                                  v
-+-------------+-------------+      +-------------+-------------+      +-------------+-------------+
++-------------+-------------+        +-------------+---------------+      +-------------+-------------+
 |     Synology NAS (Host 1)   |      |      Unraid Server (Host 2) |      |   Mobile/Remote Devices   |
-| (Docker Compose Primary)  |      |   (Heavy Workloads)     |      |    (WireGuard Clients)    |
-+-----------------------------+      +-----------------------------+      +-----------------------------+
+| (Docker Compose Primary)    |      |   (Heavy Workloads)     |   |      |  (WireGuard Clients)      |
++-----------------------------+      +-----------------------------+      +---------------------------+
 | - Media Managers            |      | - Large Media Files         |
 | - Productivity Tools        |      | - Downloads                 |
 | - Core Apps                 |      | - Centralized Logging (ELK) |
