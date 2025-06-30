@@ -70,8 +70,10 @@ The architecture is structured as follows:
         *   **Authentik:** For centralized identity and access management (IAM/SSO).
             
         *   **mTLS & Client Certificates:** For securing sensitive applications.
-            
--------------------+
+
+```
+
+-------------------+---------------
 |        External Network         |
 +---------------------------------+
               |
@@ -118,7 +120,7 @@ The architecture is structured as follows:
                 +-----------------------------+
 
 
-
+```
 
 This distributed architecture enhances both the performance and security posture of the entire self-hosted ecosystem.
 
