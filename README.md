@@ -71,6 +71,54 @@ The architecture is structured as follows:
             
         *   **mTLS & Client Certificates:** For securing sensitive applications.
             
+-------------------+
+|        External Network         |
++---------------------------------+
+              |
+              v
+     [ Internet ]
+              |
+              v
++---------------------------------+
+| Cloudflare (DNS, Proxy, CDN)    |
++---------------------------------+
+              |
+              v
++---------------------------------+
+|     Internal Network (Home)     |
++---------------------------------+
+              |
++-------------v-------------+
+|      pfSense Firewall     |
+| (IPS/IDS, DNS, WireGuard) |
++-------------+-------------+
+              |
+              +----------------------------------+----------------------------------+
+              |                                  |                                  |
+              v                                  v                                  v
++-------------+-------------+      +-------------+-------------+      +-------------+-------------+
+|     Synology NAS (Host 1)   |      |      Unraid Server (Host 2) |      |   Mobile/Remote Devices   |
+| (Docker Compose Primary)  |      |   (Heavy Workloads)     |      |    (WireGuard Clients)    |
++-----------------------------+      +-----------------------------+      +-----------------------------+
+| - Media Managers            |      | - Large Media Files         |
+| - Productivity Tools        |      | - Downloads                 |
+| - Core Apps                 |      | - Centralized Logging (ELK) |
++-----------------------------+      +-----------------------------+
+              |                                  |
+              |                                  |
+              +-----------------+----------------+
+                                |
+                                v
+                +-----------------------------+
+                |    Shared Security Layer    |
+                +-----------------------------+
+                | - CrowdSec                  |
+                | - Authentik (IAM)           |
+                | - mTLS & Client Certs       |
+                +-----------------------------+
+
+
+
 
 This distributed architecture enhances both the performance and security posture of the entire self-hosted ecosystem.
 
